@@ -321,10 +321,10 @@ class Event
                 }
                 else
                 {
-                    $systemCoordinates      = array(
-                        ['x']   => round($systemCoordinates[0] * 32),
-                        ['y']   => round($systemCoordinates[1] * 32),
-                        ['z']   => round($systemCoordinates[2] * 32),
+                    $systemCoordinates = array(
+                        'x'  => round($systemCoordinates[0] * 32),
+                        'y'  => round($systemCoordinates[1] * 32),
+                        'z'  => round($systemCoordinates[2] * 32),
                     );
                 }
             }
