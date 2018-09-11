@@ -7,12 +7,14 @@
 namespace   Journal\Event;
 use         Journal\Event;
 
-class BuyDrones extends Event
+class RepairAll extends Event
 {
     protected static $isOK          = true;
     protected static $description   = [
-        'Remove drone(s) cost from commander credits.',
+        'Remove repair cost from commander credits.',
     ];
+    
+    
     
     public static function run($json)
     {
@@ -21,8 +23,8 @@ class BuyDrones extends Event
         $isAlreadyStored   = $usersCreditsModel->fetchRow(
             $usersCreditsModel->select()
                               ->where('refUser = ?', static::$user->getId())
-                              ->where('reason = ?', 'BuyDrones')
-                              ->where('balance = ?', - (int) $json['TotalCost'])
+                              ->where('reason = ?', 'RepairAll')
+                              ->where('balance = ?', - (int) $json['Cost'])
                               ->where('dateUpdated = ?', $json['timestamp'])
         );
         
@@ -30,10 +32,13 @@ class BuyDrones extends Event
         {
             $insert                 = array();
             $insert['refUser']      = static::$user->getId();
-            $insert['reason']       = 'BuyDrones';
-            $insert['details']      = static::generateDetails($json);
-            $insert['balance']      = - (int) $json['TotalCost'];
+            $insert['reason']       = 'RepairAll';
+            $insert['balance']      = - (int) $json['Cost'];
             $insert['dateUpdated']  = $json['timestamp'];
+            
+            // Generate details
+            $details = static::generateDetails($json);
+            if(!is_null($details)){ $insert['details'] = $details; }
             
             $usersCreditsModel->insert($insert);
             
@@ -71,9 +76,6 @@ class BuyDrones extends Event
         {
             $details['shipId'] = $currentShipId;
         }
-        
-        $details['type']    = $json['Type'];
-        $details['qty']     = $json['Count'];
         
         $stationId = static::findStationId($json);
         

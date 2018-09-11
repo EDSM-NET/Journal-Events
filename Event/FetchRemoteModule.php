@@ -7,35 +7,62 @@
 namespace   Journal\Event;
 use         Journal\Event;
 
-class CrewHire extends Event
+class FetchRemoteModule extends Event
 {
     protected static $isOK          = true;
     protected static $description   = [
-        'Remove the crew hiring cost from the commander credits.',
+        'Remove module transfer price from the commander credits.',
     ];
     
     
     
     public static function run($json)
     {
-        if($json['Cost'] > 0)
+        $outfittingType = \Alias\Station\Outfitting\Type::getFromFd($json['StoredItem']);
+             
+        if(is_null($outfittingType))
+        {
+            static::$return['msgnum']   = 402;
+            static::$return['msg']      = 'Item unknown';
+            
+            \EDSM_Api_Logger_Alias::log(
+                'Alias\Station\Outfitting\Type : ' . $json['StoredItem'] . ' (Sofware#' . static::$softwareId . ')',
+                [
+                    'file'  => __FILE__,
+                    'line'  => __LINE__,
+                ]
+            );
+            
+            $json['isError']            = 1;
+            \Journal\Event::run($json);
+            
+            return static::$return;
+        }
+        
+        // Fix missing key in old journal
+        if(!array_key_exists('TransferCost', $json) && array_key_exists('', $json))
+        {
+            $json['TransferCost'] = $json[''];
+        }
+        
+        if($json['TransferCost'] > 0)
         {
             $usersCreditsModel = new \Models_Users_Credits;
             
             $isAlreadyStored   = $usersCreditsModel->fetchRow(
                 $usersCreditsModel->select()
                                   ->where('refUser = ?', static::$user->getId())
-                                  ->where('reason = ?', 'CrewHire')
-                                  ->where('balance = ?', - (int) $json['Cost'])
+                                  ->where('reason = ?', 'FetchRemoteModule')
+                                  ->where('balance = ?', (int) $json['TransferCost'])
                                   ->where('dateUpdated = ?', $json['timestamp'])
             );
             
             if(is_null($isAlreadyStored))
             {
-                $insert = array();
+                $insert                 = array();
                 $insert['refUser']      = static::$user->getId();
-                $insert['reason']       = 'CrewHire';
-                $insert['balance']      = - (int) $json['Cost'];
+                $insert['reason']       = 'FetchRemoteModule';
+                $insert['balance']      = (int) $json['TransferCost'];
                 $insert['dateUpdated']  = $json['timestamp'];
                 
                 // Generate details
@@ -72,12 +99,18 @@ class CrewHire extends Event
     
     static private function generateDetails($json)
     {
-        $details        = array();
-        $currentShipId  = static::findShipId($json);
+        $details = array();
         
-        if(!is_null($currentShipId))
+        if(array_key_exists('ShipID', $json))
         {
-            $details['shipId'] = $currentShipId;
+            $details['shipId'] = $json['ShipID'];
+        }
+        
+        $outfittingType = \Alias\Station\Outfitting\Type::getFromFd($json['StoredItem']);
+        
+        if(!is_null($outfittingType))
+        {
+            $details['type']  = $outfittingType;
         }
         
         $stationId = static::findStationId($json);
@@ -85,27 +118,6 @@ class CrewHire extends Event
         if(!is_null($stationId))
         {
             $details['stationId'] = $stationId;
-        }
-        
-        if(array_key_exists('Name', $json))
-        {
-            $details['name']        = $json['Name'];
-        }
-        
-        if(array_key_exists('CombatRank', $json))
-        {
-            $details['combatRank']  = $json['CombatRank'];
-        }
-        
-        if(array_key_exists('Faction', $json))
-        {
-            $factionsModel  = new \Models_Factions;
-            $factionId      = $factionsModel->getByName($json['Faction']);
-            
-            if(!is_null($factionId))
-            {
-                $details['refFaction'] = (int) $factionId['id'];
-            }
         }
             
         if(count($details) > 0)

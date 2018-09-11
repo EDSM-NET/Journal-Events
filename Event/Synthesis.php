@@ -84,13 +84,13 @@ class Synthesis extends Event
                     {
                         if(strtotime($currentItem['lastUpdate']) < strtotime($json['timestamp']))
                         {
-                            $databaseModels[$aliasType]->updateById(
-                                $currentItem['id'],
-                                [
-                                    'total'         => max(0, $currentItem['total'] - $material['Count']),
-                                    'lastUpdate'    => $json['timestamp'],
-                                ]
-                            );
+                            $update                 = array();
+                            $update['total']        = max(0, $currentItem['total'] - $material['Count']);
+                            $update['lastUpdate']   = $json['timestamp'];
+                            
+                            $databaseModels[$aliasType]->updateById($currentItem['id'], $update);
+                            
+                            unset($update);
                         }
                     }
                 }

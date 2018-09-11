@@ -7,11 +7,11 @@
 namespace   Journal\Event;
 use         Journal\Event;
 
-class CrewHire extends Event
+class Repair extends Event
 {
     protected static $isOK          = true;
     protected static $description   = [
-        'Remove the crew hiring cost from the commander credits.',
+        'Remove repair cost from commander credits.',
     ];
     
     
@@ -25,16 +25,16 @@ class CrewHire extends Event
             $isAlreadyStored   = $usersCreditsModel->fetchRow(
                 $usersCreditsModel->select()
                                   ->where('refUser = ?', static::$user->getId())
-                                  ->where('reason = ?', 'CrewHire')
+                                  ->where('reason = ?', 'Repair')
                                   ->where('balance = ?', - (int) $json['Cost'])
                                   ->where('dateUpdated = ?', $json['timestamp'])
             );
             
             if(is_null($isAlreadyStored))
             {
-                $insert = array();
+                $insert                 = array();
                 $insert['refUser']      = static::$user->getId();
-                $insert['reason']       = 'CrewHire';
+                $insert['reason']       = 'Repair';
                 $insert['balance']      = - (int) $json['Cost'];
                 $insert['dateUpdated']  = $json['timestamp'];
                 
@@ -87,24 +87,28 @@ class CrewHire extends Event
             $details['stationId'] = $stationId;
         }
         
-        if(array_key_exists('Name', $json))
+        if(in_array(strtolower($json['Item']), ['all', 'wear', 'hull', 'paint']))
         {
-            $details['name']        = $json['Name'];
+            $details['type'] = strtolower($json['Item']);
         }
-        
-        if(array_key_exists('CombatRank', $json))
+        else
         {
-            $details['combatRank']  = $json['CombatRank'];
-        }
-        
-        if(array_key_exists('Faction', $json))
-        {
-            $factionsModel  = new \Models_Factions;
-            $factionId      = $factionsModel->getByName($json['Faction']);
+            $outfittingType     = \Alias\Station\Outfitting\Type::getFromFd($json['Item']);
+            $details['type']    = 'module';
             
-            if(!is_null($factionId))
+            if(!is_null($outfittingType))
             {
-                $details['refFaction'] = (int) $factionId['id'];
+                $details['item'] = $outfittingType;
+            }
+            elseif(!in_array($json['Item'], static::$excludedOutfitting))
+            {
+                \EDSM_Api_Logger_Alias::log(
+                    'Alias\Station\Outfitting\Type : ' . $json['Item'] . ' (Sofware#' . static::$softwareId . ')',
+                    [
+                        'file'  => __FILE__,
+                        'line'  => __LINE__,
+                    ]
+                );
             }
         }
             

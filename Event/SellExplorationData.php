@@ -7,35 +7,51 @@
 namespace   Journal\Event;
 use         Journal\Event;
 
-class CrewHire extends Event
+class SellExplorationData extends Event
 {
     protected static $isOK          = true;
     protected static $description   = [
-        'Remove the crew hiring cost from the commander credits.',
+        'Add exploration data sell price to commander credits.',
     ];
     
     
     
     public static function run($json)
     {
-        if($json['Cost'] > 0)
+        if(array_key_exists('TotalEarnings', $json))
         {
-            $usersCreditsModel = new \Models_Users_Credits;
+            if($json['TotalEarnings'] > $json['BaseValue'])
+            {
+                $balance = (int) $json['TotalEarnings'];
+            }
+            else
+            {
+                $balance = (int) $json['BaseValue'];
+            }
+        }
+        else
+        {
+            $balance = (int) $json['BaseValue'];
+        }
+        
+        if($balance > 0)
+        {
+            $usersCreditsModel  = new \Models_Users_Credits;
             
-            $isAlreadyStored   = $usersCreditsModel->fetchRow(
+            $isAlreadyStored    = $usersCreditsModel->fetchRow(
                 $usersCreditsModel->select()
                                   ->where('refUser = ?', static::$user->getId())
-                                  ->where('reason = ?', 'CrewHire')
-                                  ->where('balance = ?', - (int) $json['Cost'])
+                                  ->where('reason = ?', 'SellExplorationData')
+                                  ->where('balance = ?', $balance)
                                   ->where('dateUpdated = ?', $json['timestamp'])
             );
             
             if(is_null($isAlreadyStored))
             {
-                $insert = array();
+                $insert                 = array();
                 $insert['refUser']      = static::$user->getId();
-                $insert['reason']       = 'CrewHire';
-                $insert['balance']      = - (int) $json['Cost'];
+                $insert['reason']       = 'SellExplorationData';
+                $insert['balance']      = $balance;
                 $insert['dateUpdated']  = $json['timestamp'];
                 
                 // Generate details
@@ -72,8 +88,12 @@ class CrewHire extends Event
     
     static private function generateDetails($json)
     {
-        $details        = array();
-        $currentShipId  = static::findShipId($json);
+        $details                = array();
+        
+        $details['bonus']       = $json['Bonus'];
+        $details['baseValue']   = $json['BaseValue'];
+        
+        $currentShipId          = static::findShipId($json);
         
         if(!is_null($currentShipId))
         {
@@ -85,27 +105,6 @@ class CrewHire extends Event
         if(!is_null($stationId))
         {
             $details['stationId'] = $stationId;
-        }
-        
-        if(array_key_exists('Name', $json))
-        {
-            $details['name']        = $json['Name'];
-        }
-        
-        if(array_key_exists('CombatRank', $json))
-        {
-            $details['combatRank']  = $json['CombatRank'];
-        }
-        
-        if(array_key_exists('Faction', $json))
-        {
-            $factionsModel  = new \Models_Factions;
-            $factionId      = $factionsModel->getByName($json['Faction']);
-            
-            if(!is_null($factionId))
-            {
-                $details['refFaction'] = (int) $factionId['id'];
-            }
         }
             
         if(count($details) > 0)

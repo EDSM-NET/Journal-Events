@@ -7,12 +7,14 @@
 namespace   Journal\Event;
 use         Journal\Event;
 
-class BuyDrones extends Event
+class SellDrones extends Event
 {
     protected static $isOK          = true;
     protected static $description   = [
-        'Remove drone(s) cost from commander credits.',
+        'Add drone(s) sell price to commander credits.',
     ];
+    
+    
     
     public static function run($json)
     {
@@ -21,8 +23,8 @@ class BuyDrones extends Event
         $isAlreadyStored   = $usersCreditsModel->fetchRow(
             $usersCreditsModel->select()
                               ->where('refUser = ?', static::$user->getId())
-                              ->where('reason = ?', 'BuyDrones')
-                              ->where('balance = ?', - (int) $json['TotalCost'])
+                              ->where('reason = ?', 'SellDrones')
+                              ->where('balance = ?', (int) $json['TotalSale'])
                               ->where('dateUpdated = ?', $json['timestamp'])
         );
         
@@ -30,9 +32,9 @@ class BuyDrones extends Event
         {
             $insert                 = array();
             $insert['refUser']      = static::$user->getId();
-            $insert['reason']       = 'BuyDrones';
+            $insert['reason']       = 'SellDrones';
             $insert['details']      = static::generateDetails($json);
-            $insert['balance']      = - (int) $json['TotalCost'];
+            $insert['balance']      = (int) $json['TotalSale'];
             $insert['dateUpdated']  = $json['timestamp'];
             
             $usersCreditsModel->insert($insert);
