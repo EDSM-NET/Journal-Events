@@ -47,7 +47,8 @@ class Died extends Event
             // Convert single killer event to Killers
             if(array_key_exists('KillerName', $json))
             {
-                $temp = array('Name'  => $json['KillerName']);
+                $temp           = array();
+                $temp['Name']   = $json['KillerName'];
                 
                 if(array_key_exists('KillerShip', $json))
                 {
@@ -81,7 +82,10 @@ class Died extends Event
                                 
                                 \EDSM_Api_Logger_Alias::log(
                                     'Alias\Ship\NPC\Type : ' . $killer['Name'] . ' (Sofware#' . static::$softwareId . ')',
-                                    array('file' => __FILE__, 'line' => __LINE__,)
+                                    [
+                                        'file'  => __FILE__,
+                                        'line'  => __LINE__,
+                                    ]
                                 );
                                 
                                 $json['isError']            = 1;
@@ -110,7 +114,10 @@ class Died extends Event
                                 
                                 \EDSM_Api_Logger_Alias::log(
                                     'Alias\Ship\Type : ' . $killer['Ship'] . ' (Sofware#' . static::$softwareId . ')',
-                                    array('file' => __FILE__, 'line' => __LINE__,)
+                                    [
+                                        'file'  => __FILE__,
+                                        'line'  => __LINE__,
+                                    ]
                                 );
                                 
                                 $json['isError']            = 1;
