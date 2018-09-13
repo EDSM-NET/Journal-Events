@@ -126,7 +126,6 @@ class ShipyardBuy extends Event
                 $insert['reason']       = 'ShipyardSell';
                 $insert['balance']      = (int) $json['SellPrice'];
                 $insert['dateUpdated']  = $json['timestamp'];
-                );
                 
                 // Generate details
                 $details = static::generateDetailsSell($json);
