@@ -249,7 +249,7 @@ class MissionCompleted extends Event
                 {
                     $oldDetails = array();
                     
-                    if(!is_null($currentMission[$key]))
+                    if(array_key_exists($key, $currentMission) && !is_null($currentMission[$key]))
                     {
                         $oldDetails = \Zend_Json::decode($currentMission[$key]);
                     }
