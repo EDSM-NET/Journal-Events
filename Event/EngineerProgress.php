@@ -24,7 +24,12 @@ class EngineerProgress extends Event
         {
             $tempEngineer               = array();
             $tempEngineer['Engineer']   = $json['Engineer'];
-            $tempEngineer['EngineerID'] = $json['EngineerID'];
+            
+            if(array_key_exists('EngineerID', $json))
+            {
+                $tempEngineer['EngineerID']           = $json['EngineerID'];
+                unset($json['EngineerID']);
+            }
             
             if(array_key_exists('Rank', $json))
             {
