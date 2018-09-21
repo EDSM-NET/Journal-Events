@@ -27,7 +27,7 @@ class MaterialTrade extends Event
             $aliasClass         = 'Alias\Commander\Data';
             $materialTraderType = 'Encoded';
         }
-        elseif(in_array($json['TraderType'], array('raw', 'manufactured')))
+        elseif(in_array($json['TraderType'], ['raw', 'manufactured']))
         {
             $databaseModel  = new \Models_Users_Materials;
             $aliasClass     = 'Alias\Commander\Material';

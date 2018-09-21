@@ -46,7 +46,6 @@ class Discard
         'StartJump',
         'Touchdown',
         'Liftoff',
-        'ApproachSettlement',
         'NavBeaconScan',
         'SupercruiseEntry',
         'SupercruiseExit',

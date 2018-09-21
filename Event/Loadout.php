@@ -85,6 +85,7 @@ class Loadout extends Event
                 
                 // Ship value
                 if(array_key_exists('HullValue', $json) && $json['HullValue'] <= PHP_INT_MAX){ $insert['hullValue'] = $json['HullValue']; }
+                if(array_key_exists('HullHealth', $json)){ $insert['hullHealth'] = $json['HullHealth']; }
                 if(array_key_exists('ModulesValue', $json) && $json['ModulesValue'] <= PHP_INT_MAX){ $insert['modulesValue'] = $json['ModulesValue']; }
                 if(array_key_exists('Rebuy', $json) && $json['Rebuy'] <= PHP_INT_MAX){ $insert['rebuyValue'] = $json['Rebuy']; }
                 
