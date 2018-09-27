@@ -67,7 +67,7 @@ class LoadGame extends Event
                 {
                     if(!array_key_exists('fuelUpdated', $currentShip) || is_null($currentShip['fuelUpdated']) || strtotime($currentShip['fuelUpdated']) < strtotime($json['timestamp']))
                     {
-                        $update['fuelMainLevel']     = $json['FuelLevel'];
+                        $update['fuelMainLevel']     = max(0, $json['FuelLevel']);
                         $update['fuelUpdated']       = $json['timestamp'];
                     }
                 }
