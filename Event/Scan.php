@@ -114,39 +114,6 @@ class Scan extends Event
             return static::$return;
         }
         
-        $currentBodyData    = $systemsBodiesModel->getById($currentBody);
-        $firstDiscoverUser  = $currentBodyData['refUser'];
-        $update             = array();
-        
-        if(is_null($currentBodyData['refUser']))
-        {
-            $update['refUser']          = static::$user->getId();
-            $update['dateDiscovery']    = $json['timestamp'];
-            
-            $firstDiscoverUser          = static::$user->getId();
-        }
-        else
-        {
-            if(is_null($currentBodyData['dateDiscovery']) && $currentBodyData['refUser'] == static::$user->getId())
-            {
-                $update['dateDiscovery']    = $json['timestamp'];
-            }
-            elseif(!is_null($currentBodyData['dateDiscovery']) && strtotime($json['timestamp']) < strtotime($currentBodyData['dateDiscovery']))
-            {
-                $update['refUser']          = static::$user->getId();
-                $update['dateDiscovery']    = $json['timestamp'];
-            
-                $firstDiscoverUser          = static::$user->getId();
-            }
-        }
-        
-        if(count($update) > 0)
-        {
-            $systemsBodiesModel->updateById($currentBody, $update);
-        }
-        
-        unset($systemsBodiesModel, $update);
-        
         // Insert user scan
         $systemsBodiesUsersModel = new \Models_Systems_Bodies_Users;
         
@@ -180,11 +147,15 @@ class Scan extends Event
             }
         }
         
+        $firstScannedBy = $systemsBodiesUsersModel->getFirstScannedByRefBody($currentBody);
+        
         unset($systemsBodiesUsersModel);
         
         //BADGES
-        if($firstDiscoverUser == static::$user->getId())
+        if(!is_null($firstScannedBy) && $firstScannedBy['refUser'] == static::$user->getId())
         {
+            $currentBodyData = $systemsBodiesModel->getById($currentBody);
+            
             if(array_key_exists('group', $currentBodyData) && $currentBodyData['group'] == 1)
             {
                 if(array_key_exists('type', $currentBodyData) && \Alias\Body\Star\Type::isScoopable($currentBodyData['type']) === true)
@@ -249,7 +220,11 @@ class Scan extends Event
                     );
                 }
             }
+            
+            unset($currentBodyData);
         }
+        
+        unset($systemsBodiesModel);
         
         return static::$return;
     }
