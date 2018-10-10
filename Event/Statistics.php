@@ -169,6 +169,7 @@ class Statistics extends Event
                             if($json[$category][$value] >= 3600) { static::$user->giveBadge(7500); }
                             if($json[$category][$value] >= 86400) { static::$user->giveBadge(7510); }
                             if($json[$category][$value] >= 3600000) { static::$user->giveBadge(7520); }
+                            if($json[$category][$value] >= 36000000) { static::$user->giveBadge(7530); }
                         }
                         
                         if($dbKey == 'explorationGreatestDistanceFromStart')

@@ -13,9 +13,9 @@ class Friends extends Event
     protected static $description   = [
         'Update friends status on EDSM',
     ];
-    
-    
-    
+
+
+
     public static function run($json)
     {
         // User doesn't want to link, but if lost we need to remove it
@@ -23,7 +23,7 @@ class Friends extends Event
         {
             return static::$return;
         }
-        
+
         if(array_key_exists('Status', $json) && array_key_exists('Name', $json))
         {
             if(in_array(strtolower($json['Status']), ['online', 'offline', 'added']))
@@ -31,19 +31,19 @@ class Friends extends Event
                 // Check if friend is an EDSM user
                 $usersModel     = new \Models_Users;
                 $isFriendUser   = $usersModel->getByName($json['Name']);
-                
+
                 if(!is_null($isFriendUser))
                 {
-                    $isFriendUser = \EDSM_User::getInstance($isFriendUser['id']);
-                    
+                    $isFriendUser = \Component\User::getInstance($isFriendUser['id']);
+
                     if($isFriendUser->addFriendsFromJournal() === false)
                     {
                         return static::$return;
                     }
-                    
+
                     $friendsModel   = new \Models_Users_Friends;
                     $areFriends     = $friendsModel->getStatusByRefUserAndRefFriend(static::$user->getId(), $isFriendUser->getId());
-                    
+
                     if(is_null($areFriends))
                     {
                         try
@@ -54,9 +54,9 @@ class Friends extends Event
                             $insert['status']       = 1;
                             $insert['dateRequest']  = $json['timestamp'];
                             $insert['dateAccepted'] = $json['timestamp'];
-                            
+
                             $friendsModel->insert($insert);
-                            
+
                             unset($insert);
                         }
                         catch(\Zend_Db_Exception $e)
@@ -64,22 +64,22 @@ class Friends extends Event
                             // Based on unique index, this journal entry was already saved.
                             if(strpos($e->getMessage(), '1062 Duplicate') !== false)
                             {
-                                
+
                             }
                             else
                             {
                                 static::$return['msgnum']   = 500;
                                 static::$return['msg']      = 'Exception: ' . $e->getMessage();
-                                
+
                                 $registry = \Zend_Registry::getInstance();
-                            
+
                                 if($registry->offsetExists('sentryClient'))
                                 {
                                     $sentryClient = $registry->offsetGet('sentryClient');
                                     $sentryClient->captureException($e);
                                 }
                             }
-                        }   
+                        }
                     }
                     else
                     {
@@ -87,7 +87,7 @@ class Friends extends Event
                         if($areFriends['status'] == 1 && in_array(strtolower($json['Status']), ['online', 'offline']))
                         {
                             $update = array();
-                            
+
                             if(strtotime($areFriends['dateRequest']) < strtotime($json['timestamp']))
                             {
                                 $update['dateRequest'] = $json['timestamp'];
@@ -96,7 +96,7 @@ class Friends extends Event
                             {
                                 $update['dateAccepted'] = $json['timestamp'];
                             }
-                            
+
                             if(count($update) > 0)
                             {
                                 $friendsModel->updateByRefUserAndRefFriend(
@@ -105,12 +105,12 @@ class Friends extends Event
                                     $update
                                 );
                             }
-                            
+
                             unset($update);
                         }
                     }
                 }
-                
+
                 unset($usersModel, $isFriendUser);
             }
             elseif(in_array(strtolower($json['Status']), ['lost']))
@@ -118,13 +118,13 @@ class Friends extends Event
                 // Check if friend is an EDSM user
                 $usersModel     = new \Models_Users;
                 $isFriendUser   = $usersModel->getByName($json['Name']);
-                
+
                 if(!is_null($isFriendUser))
                 {
-                    $isFriendUser   = \EDSM_User::getInstance($isFriendUser['id']);
+                    $isFriendUser   = \Component\User::getInstance($isFriendUser['id']);
                     $friendsModel   = new \Models_Users_Friends;
                     $areFriends     = $friendsModel->getStatusByRefUserAndRefFriend(static::$user->getId(), $isFriendUser->getId());
-                    
+
                     if(!is_null($areFriends))
                     {
                         if(strtotime($areFriends['dateAccepted']) < strtotime($json['timestamp']))
@@ -136,7 +136,7 @@ class Friends extends Event
                         }
                     }
                 }
-                
+
                 unset($usersModel, $isFriendUser);
             }
             elseif(in_array(strtolower($json['Status']), array('requested', 'declined')))
@@ -149,7 +149,7 @@ class Friends extends Event
                 \Journal\Event::run($json);
             }
         }
-        
+
         return static::$return;
     }
 }

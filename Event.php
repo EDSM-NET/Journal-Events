@@ -9,28 +9,28 @@ namespace   Journal;
 class Event
 {
     protected static $isOK          = false;
-    
+
     // Default game state
     protected static $gameState     = [
         'systemName'                    => null,
         'systemCoordinates'             => null,
         'stationName'                   => null,
         'shipId'                        => null,
-        
+
         'isGuestCrew'                   => false,
     ];
-    
+
     // Default return message
     protected static $return        = [
         'msgnum'    => 100,
         'msg'       => 'OK',
     ];
-    
+
     // Default description
     protected static $description   = '<ul>
                                            <li>Stored in a temporary table.</li>
                                        </ul>';
-    
+
     // Exclude ships that don''t belong to main list
     protected static $notShipTypes  = [
         'testbuggy',
@@ -41,21 +41,21 @@ class Event
         'gdn_hybrid_fighter_v2',
         'gdn_hybrid_fighter_v3',
     ];
-    
+
     // Exclude some outfitting that don't belong in main list
     protected static $excludedOutfitting = [
         '$enginecustomisation_blue_name;',
-        
+
         '$modularcargobaydoor_name;',
         '$modularcargobaydoorfdl_name;',
-        
+
         '$decal_powerplay_aislingduval_name;',
-        
+
         '$paintjob_testbuggy_luminous_purple_name;',
         '$paintjob_testbuggy_tactical_grey_name;',
-        
+
         '$paintjob_federation_fighter_gladiator_blueblack_name;',
-        
+
         '$adder_cockpit_name;',
         '$anaconda_cockpit_name;',
         '$asp_cockpit_name;',
@@ -84,13 +84,13 @@ class Event
         '$viper_mkiv_cockpit_name;',
         '$vulture_cockpit_name;',
     ];
-    
+
     // Store current user/software
     protected static $user          = null;
     protected static $softwareId    = null;
-    
-    
-    
+
+
+
     // Default method for unknown events
     public static function run($json)
     {
@@ -104,19 +104,19 @@ class Event
                 $insert['event']        = $json['event'];
                 $insert['gameState']    = \Zend_Json::encode(static::$gameState);
                 $insert['dateEvent']    = $json['timestamp'];
-                
+
                 // We do not need event and timestamps in the final JSON
                 unset($json['event'], $json['timestamp']);
-                
+
                 // If the message came from an erroneous events, store it for further processing
                 if(array_key_exists('isError', $json))
                 {
                     $insert['isError'] = 1;
                     unset($json['isError']);
                 }
-                
+
                 $insert['message']      = \Zend_Json::encode($json);
-                
+
                 $journalModel = new \Models_Journal;
                 $journalModel->insert($insert);
             }
@@ -144,9 +144,9 @@ class Event
                     {
                         static::$return['msgnum']   = 500;
                         static::$return['msg']      = 'Exception: ' . $e->getMessage();
-                        
+
                         $registry = \Zend_Registry::getInstance();
-                    
+
                         if($registry->offsetExists('sentryClient'))
                         {
                             $sentryClient = $registry->offsetGet('sentryClient');
@@ -156,35 +156,35 @@ class Event
                 }
             }
         }
-        
+
         return static::$return;
     }
-    
-    
-    
+
+
+
     /**
      * Init methods
      */
     public static function setUser($user)
     {
-        if($user instanceof \EDSM_User)
+        if($user instanceof \Component\User)
         {
             static::$user = $user;
         }
     }
-    
+
     public static function setSoftware($softwareId)
     {
         static::$softwareId = $softwareId;
     }
-    
+
     public static function setGameState($gameState)
     {
         static::$gameState = $gameState;
     }
-    
-    
-    
+
+
+
     public static function getDescription($raw = false)
     {
         if($raw === false)
@@ -194,23 +194,23 @@ class Event
                 return '<ul><li>' . implode('</li></li>', static::$description) . '</li></ul>';
             }
         }
-        
+
         return static::$description;
     }
-    
+
     public static function isOK()
     {
         return static::$isOK;
     }
-    
+
     public static function resetReturnMessage()
     {
         static::$return['msgnum']   = 100;
         static::$return['msg']      = 'OK';
     }
-    
-    
-    
+
+
+
     /**
      * COMMON METHODS
      */
@@ -218,7 +218,7 @@ class Event
     {
         $currentShipId          = static::$user->getCurrentGameShipId();
         $lastCurrentShipUpdate  = static::$user->getCurrentGameShipIdLastUpdate();
-        
+
         if($currentShipId != $newShipId || is_null($lastCurrentShipUpdate))
         {
             // If newer or null, update the ship ID
@@ -232,7 +232,7 @@ class Event
                 {
                     $newShipId = (int) $newShipId;
                 }
-                
+
                 $usersModel = new \Models_Users;
                 $usersModel->updateById(
                     static::$user->getId(),
@@ -244,7 +244,7 @@ class Event
             }
         }
     }
-    
+
     /**
      * EVENTS DETAILS
      */
@@ -252,36 +252,36 @@ class Event
     {
         $systemName         = null;
         $systemCoordinates  = null;
-        
+
         // If event contains SystemAddress
         if(array_key_exists('SystemAddress', $json))
         {
             $systemsModel   = new \Models_Systems;
             $system         = $systemsModel->getById64($json['SystemAddress']);
-            
+
             if(!is_null($system))
             {
                 return $system['id'];
             }
         }
-        
+
         // If transient state, take the transient state
         if(array_key_exists('_systemAddress', $json) && !is_null($json['_systemAddress']) && !empty($json['_systemAddress']))
         {
             $systemsModel   = new \Models_Systems;
             $system         = $systemsModel->getById64($json['_systemAddress']);
-            
+
             if(!is_null($system))
             {
                 return $system['id'];
             }
         }
-        
+
         // Some events have the StarSystem
         if(in_array($json['event'], ['Docked', 'Location', 'Scan']) && array_key_exists('StarSystem', $json))
         {
             $systemName = $json['StarSystem'];
-            
+
             if(array_key_exists('StarPos', $json)) // Not in Docked
             {
                 $systemCoordinates = $json['StarPos'];
@@ -291,7 +291,7 @@ class Event
         elseif(array_key_exists('_systemName', $json) && !is_null($json['_systemName']))
         {
             $systemName = $json['_systemName'];
-            
+
             if(array_key_exists('_systemCoordinates', $json))
             {
                 $systemCoordinates = $json['_systemCoordinates'];
@@ -301,13 +301,13 @@ class Event
         elseif(!is_null(static::$gameState['systemName']))
         {
             $systemName = static::$gameState['systemName'];
-            
+
             if(!is_null(static::$gameState['systemCoordinates']))
             {
                 $systemCoordinates = static::$gameState['systemCoordinates'];
             }
         }
-            
+
         // We have a system name, proceed
         if(!is_null($systemName))
         {
@@ -328,33 +328,33 @@ class Event
                     );
                 }
             }
-            
+
             $systemName     = trim($systemName);
-            
+
             $systemsModel   = new \Models_Systems;
             $system         = $systemsModel->getByName($systemName);
-            
+
             // System creation
             if(is_null($system))
             {
                 $insertSystem           = array();
                 $insertSystem['name']   = $systemName;
-                
+
                 if(!is_null($systemCoordinates))
                 {
                     $insertSystem = array_merge($insertSystem, $systemCoordinates);
                 }
             }
-            
+
             if(!is_null($system))
             {
                 $currentSystem = \EDSM_System::getInstance($system['id']);
-                
+
                 // Check system renamed/merged to another
                 if($currentSystem->isHidden() === true)
                 {
                     $mergedTo = $currentSystem->getMergedTo();
-                    
+
                     if(!is_null($mergedTo) && $preventRenamedSystems === false)
                     {
                         // Switch systems when they have been renamed
@@ -365,10 +365,10 @@ class Event
                         return null;
                     }
                 }
-                
+
                 // Check if system have duplicates
                 $duplicates = $currentSystem->getDuplicates();
-                        
+
                 if(!is_null($duplicates) && is_array($duplicates) && count($duplicates) > 0)
                 {
                     // We don't have coordinates to check duplicates...
@@ -383,7 +383,7 @@ class Event
                             foreach($duplicates AS $duplicate)
                             {
                                 $duplicateSystem = \EDSM_System::getInstance($duplicate);
-                                
+
                                 if($systemCoordinates['x'] == $duplicateSystem->getX() && $systemCoordinates['y'] == $duplicateSystem->getY() && $systemCoordinates['z'] == $duplicateSystem->getZ())
                                 {
                                     if(array_key_exists('SystemAddress', $json) && !is_null($duplicateSystem->getId64()))
@@ -396,10 +396,10 @@ class Event
                                             ]
                                         );
                                     }
-                                    
+
                                     return $duplicateSystem->getId();
                                 }
-                                
+
                                 unset($duplicateSystem);
                             }
                         }
@@ -415,7 +415,7 @@ class Event
                                     ]
                                 );
                             }
-                            
+
                             return $currentSystem->getId();
                         }
                     }
@@ -432,46 +432,46 @@ class Event
                             ]
                         );
                     }
-                    
+
                     return $currentSystem->getId();
                 }
             }
         }
-        
+
         // If timestamp is after last location
-        
+
         return null;
     }
-     
+
     protected static function findStationId($json)
     {
         $systemId    = null;
         $stationName = null;
-        
+
         // If event contain MarketID
         if(array_key_exists('MarketID', $json))
         {
             $stationsModel  = new \Models_Stations;
             $station        = $stationsModel->getByMarketId($json['MarketID']);
-            
+
             if(!is_null($station))
             {
                 return $station['id'];
             }
         }
-        
+
         // If transient state, take the transient state
         if(array_key_exists('_marketId', $json) && !is_null($json['_marketId']) && !empty($json['_marketId']))
         {
             $stationsModel  = new \Models_Stations;
             $station        = $stationsModel->getByMarketId($json['_marketId']);
-            
+
             if(!is_null($station))
             {
                 return $station['id'];
             }
         }
-        
+
         // Some events have the StationName
         if(in_array($json['event'], ['Docked', 'Location']) && array_key_exists('StationName', $json))
         {
@@ -487,33 +487,33 @@ class Event
         {
             $stationName = static::$gameState['stationName'];
         }
-        
+
         if(!is_null($stationName))
         {
              $systemId = static::findSystemId($json);
-            
+
             if(!is_null($systemId))
             {
                 $currentSystem  = \EDSM_System::getInstance($systemId);
                 $stations       = $currentSystem->getStations();
-                
+
                 foreach($stations AS $station)
                 {
                     $currentStation = \EDSM_System_Station::getInstance($station['id']);
-                    
+
                     if($currentStation->getName() == $stationName)
                     {
                         if(array_key_exists('MarketID', $json) && is_null($currentStation->getMarketId()))
                         {
                             $stationsModel = new \Models_Stations;
                             $stationsModel->updateById(
-                                $currentStation->getId(), 
+                                $currentStation->getId(),
                                 [
                                     'marketId' => $json['MarketID'],
                                 ]
                             );
                         }
-                        
+
                         return $currentStation->getId();
                     }
                 }
@@ -525,7 +525,7 @@ class Event
                 $stations      = $stationsModel->fetchAll(
                     $stationsModel->select()->where('name = ?', $stationName)
                 );
-                
+
                 if(!is_null($stations) && count($stations) == 1)
                 {
                     $stations = $stations->toArray();
@@ -533,13 +533,13 @@ class Event
                 }
             }
         }
-        
+
         //TODO: If timestamp is after last docking, take the docked station
-        
-        
+
+
         return null;
     }
-    
+
     protected static function findShipId($json)
     {
         // If transient state, take the transient state
@@ -550,13 +550,13 @@ class Event
                 return $json['_shipId'];
             }
         }
-        
+
         // If multiple event have fed the transient state
         if(!is_null(static::$gameState['shipId']))
         {
             return static::$gameState['shipId'];
         }
-        
+
         return null;
     }
 }
