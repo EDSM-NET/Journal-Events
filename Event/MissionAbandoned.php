@@ -14,68 +14,92 @@ class MissionAbandoned extends Event
         'Set mission status to "Abandoned".',
         'Remove fine from the commander credits.',
     ];
-    
-    
-    
+
+
+
     public static function run($json)
     {
         $usersMissionsModel = new \Models_Users_Missions;
         $currentMission     = $usersMissionsModel->getById($json['MissionID']);
-        
+
         if(is_null($currentMission))
         {
             $missionType        = \Alias\Station\Mission\Type::getFromFd($json['Name']);
-            
+
             if(is_null($missionType))
             {
                 static::$return['msgnum']   = 402;
                 static::$return['msg']      = 'Item unknown';
-                
+
                 // Save in temp table for reparsing
                 $json['isError']            = 1;
                 \Journal\Event::run($json);
-                
+
                 return static::$return;
             }
-            
+
             $insert                     = array();
             $insert['id']               = $json['MissionID'];
             $insert['refUser']          = static::$user->getId();
             $insert['type']             = $missionType;
             $insert['status']           = 'Abandoned';
             $insert['dateAbandoned']    = $json['timestamp'];
-            
+
             if(array_key_exists('Fine', $json) && $json['Fine'] > 0)
             {
                 $insert['details'] = \Zend_Json::encode(array('fine' => $json['Fine']));
             }
-            
-            $usersMissionsModel->insert($insert);
-            
+
+            try
+            {
+                $usersMissionsModel->insert($insert);
+            }
+            catch(Exception $ex)
+            {
+                // Based on unique index, this ship entry was already saved.
+                if(strpos($e->getMessage(), '1062 Duplicate') !== false)
+                {
+                    // CONTINUE...
+                }
+                else
+                {
+                    static::$return['msgnum']   = 500;
+                    static::$return['msg']      = 'Exception: ' . $e->getMessage();
+
+                    $registry = \Zend_Registry::getInstance();
+
+                    if($registry->offsetExists('sentryClient'))
+                    {
+                        $sentryClient = $registry->offsetGet('sentryClient');
+                        $sentryClient->captureException($e);
+                    }
+                }
+            }
+
             unset($insert);
         }
         else
         {
             $update = array();
-            
+
             if($currentMission['status'] != 'Abandoned')
             {
                 $update['status'] = 'Abandoned';
             }
-            
+
             if($currentMission['dateAbandoned'] != $json['timestamp'])
             {
                 $update['dateAbandoned'] = $json['timestamp'];
             }
-            
+
             if(array_key_exists('Fine', $json) && $json['Fine'] > 0)
             {
                 if(!is_null($currentMission['details']))
                 {
                     $details = \Zend_Json::decode($currentMission['details']);
-                    
+
                     $details['fine'] = $json['Fine'];
-                    
+
                     ksort($details);
                     $update['details'] = \Zend_Json::encode($details);
                 }
@@ -84,22 +108,22 @@ class MissionAbandoned extends Event
                     $update['details'] = \Zend_Json::encode(array('fine' => $json['Fine']));
                 }
             }
-            
+
             if(count($update) > 0)
             {
                 $usersMissionsModel->updateById($json['MissionID'], $update);
             }
-            
+
             unset($update);
         }
-        
+
         unset($usersMissionsModel, $currentMission);
-        
+
         // Remove fine from the commander
         if(array_key_exists('Fine', $json) && $json['Fine'] > 0)
         {
             $usersCreditsModel = new \Models_Users_Credits;
-        
+
             $isAlreadyStored   = $usersCreditsModel->fetchRow(
                 $usersCreditsModel->select()
                                   ->where('refUser = ?', static::$user->getId())
@@ -107,7 +131,7 @@ class MissionAbandoned extends Event
                                   ->where('balance = ?', (int) $json['Fine'])
                                   ->where('dateUpdated = ?', $json['timestamp'])
             );
-            
+
             if(is_null($isAlreadyStored))
             {
                 $insert = array();
@@ -115,19 +139,19 @@ class MissionAbandoned extends Event
                 $insert['reason']       = 'MissionAbandoned';
                 $insert['balance']      = (int) $json['Fine'];
                 $insert['dateUpdated']  = $json['timestamp'];
-                
+
                 // Generate details
                 $details = static::generateFineDetails($json);
                 if(!is_null($details)){ $insert['details'] = $details; }
-                
+
                 $usersCreditsModel->insert($insert);
-                
+
                 unset($insert);
             }
             else
             {
                 $details = static::generateFineDetails($json);
-                
+
                 if($isAlreadyStored->details != $details)
                 {
                     $usersCreditsModel->updateById(
@@ -138,39 +162,39 @@ class MissionAbandoned extends Event
                     );
                 }
             }
-            
+
             unset($usersCreditsModel, $isAlreadyStored);
         }
-        
+
         return static::$return;
     }
-    
+
     static private function generateFineDetails($json)
     {
         $details        = array();
         $currentShipId  = static::findShipId($json);
-        
+
         if(!is_null($currentShipId))
         {
             $details['shipId'] = $currentShipId;
         }
-        
+
         $stationId = static::findStationId($json);
-        
+
         if(!is_null($stationId))
         {
             $details['stationId'] = $stationId;
         }
-        
+
         $details['missionId']   = $json['MissionID'];
         $details['missionType'] = \Alias\Station\Mission\Type::getFromFd($json['Name']);
-            
+
         if(count($details) > 0)
         {
             ksort($details);
             return \Zend_Json::encode($details);
         }
-        
+
         return null;
     }
 }
