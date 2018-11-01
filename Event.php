@@ -53,6 +53,7 @@ class Event
 
         '$paintjob_testbuggy_luminous_purple_name;',
         '$paintjob_testbuggy_tactical_grey_name;',
+        '$paintjob_testbuggy_vibrant_red_name;',
 
         '$paintjob_federation_fighter_gladiator_blueblack_name;',
 
