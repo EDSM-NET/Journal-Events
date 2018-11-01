@@ -15,24 +15,24 @@ class FSDJump extends Event
         'Update ship current system.',
         'Remove fuel from ship.',
     ];
-    
-    
-    
+
+
+
     public static function run($json)
     {
         if(static::$gameState['isGuestCrew'] === true)
         {
             static::$return['msgnum']   = 104;
             static::$return['msg']      = 'Crew session';
-            
+
             return static::$return;
         }
-        
+
         $currentSystem      = null;
         $systemId64         = null;
         $systemFoundById64  = false;
         $systemName         = trim($json['StarSystem']);
-        
+
         if(array_key_exists('StarPos', $json))
         {
             $systemCoordinates  = $json['StarPos'];
@@ -41,7 +41,7 @@ class FSDJump extends Event
         {
             $systemCoordinates  = null;
         }
-        
+
         // Convert coordinates to EDSM format
         if(!is_null($systemCoordinates))
         {
@@ -51,17 +51,17 @@ class FSDJump extends Event
                 'z'  => round($systemCoordinates[2] * 32),
             );
         }
-        
+
         // Find the best system according to the event
         if(!is_null($systemName) && !empty($systemName))
         {
             $systemsModel   = new \Models_Systems;
-            
+
             if(array_key_exists('SystemAddress', $json))
             {
                 $systemId64 = $json['SystemAddress'];
                 $system     = $systemsModel->getById64($systemId64);
-                
+
                 if(is_null($system))
                 {
                     $system = $systemsModel->getByName($systemName);
@@ -75,14 +75,14 @@ class FSDJump extends Event
             {
                 $system = $systemsModel->getByName($systemName);
             }
-            
+
             // System creation
             if(is_null($system))
             {
                 $systemId               = null;
                 $insertSystem           = array();
                 $insertSystem['name']   = $systemName;
-                
+
                 if(!is_null($systemId64))
                 {
                     $insertSystem['id64'] = $systemId64;
@@ -91,7 +91,7 @@ class FSDJump extends Event
                 {
                    $insertSystem = array_merge($insertSystem, $systemCoordinates);
                 }
-                
+
                 try
                 {
                     $systemId                           = $systemsModel->insert($insertSystem);
@@ -101,7 +101,7 @@ class FSDJump extends Event
                 {
                     $systemId       = null;
                     $system         = $systemsModel->getByName($systemName);
-                    
+
                     if(!is_null($system))
                     {
                         $systemId                           = $system['id'];
@@ -111,13 +111,13 @@ class FSDJump extends Event
                     {
                         static::$return['msgnum']   = 500;
                         static::$return['msg']      = 'Exception: ' . $e->getMessage();
-                        
+
                         return static::$return;
                     }
                 }
-                
+
                 unset($insertSystem);
-                
+
                 if(!is_null($systemId))
                 {
                     $currentSystem = \EDSM_System::getInstance($systemId);
@@ -127,12 +127,12 @@ class FSDJump extends Event
             else
             {
                 $currentSystem = \EDSM_System::getInstance($system['id']);
-                
+
                 // Check system renamed/merged to another
                 if($currentSystem->isHidden() === true)
                 {
                     $mergedTo = $currentSystem->getMergedTo();
-                    
+
                     if(!is_null($mergedTo))
                     {
                         // Switch systems when they have been renamed
@@ -142,11 +142,11 @@ class FSDJump extends Event
                     {
                         static::$return['msgnum']   = 451;
                         static::$return['msg']      = 'System probably non existant';
-                        
+
                         return static::$return;
                     }
                 }
-                
+
                 if(!is_null($systemCoordinates))
                 {
                     // Check if system have duplicates if the provided coordinates doesn't match
@@ -155,7 +155,7 @@ class FSDJump extends Event
                         $createDuplicate    = true;
                         $minDistance        = 9999999999999999999999999999999;
                         $duplicates         = $currentSystem->getDuplicates();
-                        
+
                         if(!is_null($systemId64) && $systemFoundById64 === true)
                         {
                             $createDuplicate = false;
@@ -174,37 +174,37 @@ class FSDJump extends Event
                                 );
                             }
                         }
-                        
+
                         // Check if a duplicate block the creation
                         if(!is_null($duplicates) && is_array($duplicates) && count($duplicates) > 0 && $systemFoundById64 === false)
                         {
                             foreach($duplicates AS $duplicate)
                             {
                                 $currentSystemTest  = \EDSM_System::getInstance($duplicate);
-                                
+
                                 // Try to follow hidden system
                                 $mergedTo = $currentSystemTest->getMergedTo();
                                 if($currentSystemTest->isHidden() === true && !is_null($mergedTo))
                                 {
                                     $currentSystemTest = \EDSM_System::getInstance($mergedTo);
                                 }
-                                
+
                                 // We do not want to create a new duplicate if one of them is not green
                                 if($currentSystemTest->isCoordinatesLocked() === false)
                                 {
                                     $createDuplicate = false;
                                 }
-                                
+
                                 // If coordinates are the same, then swith to that duplicate!
                                 if($systemCoordinates['x'] == $currentSystemTest->getX() && $systemCoordinates['y'] == $currentSystemTest->getY() && $systemCoordinates['z'] == $currentSystemTest->getZ())
                                 {
                                     $createDuplicate    = false;
                                     $currentSystem      = $currentSystemTest;
-                                    
+
                                     unset($currentSystemTest);
                                     break;
                                 }
-                                
+
                                 // If we still ok to create a duplicate, test the minimum distance
                                 if($createDuplicate === true)
                                 {
@@ -218,30 +218,30 @@ class FSDJump extends Event
                                 }
                             }
                         }
-                        
+
                         // All systems are green, and distance is fine, create a new duplicate
                         if($createDuplicate === true && $minDistance > 20 && $minDistance < 999999999999999999999999999999)
                         {
                             // Duplicate the system
                             $oldSystem = $currentSystem;
-                            
+
                             try
                             {
                                 $insertSystem           = array_merge(
                                     array(
                                         'name'                  => $currentSystem->getName(),
                                         'coordinatesLocked'     => 0,
-                                    ), 
+                                    ),
                                     $systemCoordinates
                                 );
-                                
+
                                 if(!is_null($systemId64))
                                 {
                                     $insertSystem['id64'] = $systemId64;
                                 }
-                                
+
                                 $newId                  = $systemsModel->insert($insertSystem);
-                                
+
                                 // Switch current system
                                 $currentSystem                      = \EDSM_System::getInstance($newId);
                                 static::$return['systemCreated']    = true;
@@ -253,7 +253,7 @@ class FSDJump extends Event
                                 static::$return['systemCreated']    = false;
                                 unset($newId);
                             }
-                            
+
                             // If the creation worked, insert the duplicate warning
                             if(static::$return['systemCreated'] === true && isset($newId))
                             {
@@ -261,7 +261,7 @@ class FSDJump extends Event
                                 $systemsDuplicatesModel->insertSystems($currentSystem->getId(), $newId);
                                 unset($systemsDuplicatesModel);
                             }
-                            
+
                             unset($oldSystem);
                         }
                         elseif(!is_null($systemId64) && $systemFoundById64 === false)
@@ -280,12 +280,12 @@ class FSDJump extends Event
                 }
             }
         }
-        
+
         // Handle coordinates locking and temp coordinates
         if(!is_null($systemCoordinates) && !is_null($currentSystem))
         {
             $systemsCoordinatesTempModel    = new \Models_Systems_CoordinatesTemp;
-            
+
             if($systemCoordinates['x'] == $currentSystem->getX() && $systemCoordinates['y'] == $currentSystem->getY() && $systemCoordinates['z'] == $currentSystem->getZ())
             {
                 // All coordinates match, should we lock them?
@@ -294,12 +294,12 @@ class FSDJump extends Event
                     $lockCoordinates    = false;
                     $tempCoordinates    = $systemsCoordinatesTempModel->getByRefSystem($currentSystem->getId());
                     $tempUsers          = array();
-                    
+
                     // Check against the temp coordinates
                     if(!is_null($tempCoordinates) && count($tempCoordinates) > 0)
                     {
                         $lockCoordinates = true;
-                        
+
                         foreach($tempCoordinates AS $temp)
                         {
                             // Skip locking if temp coordinates are wrong
@@ -317,13 +317,13 @@ class FSDJump extends Event
                                 }
                             }
                         }
-                        
+
                         // If no other users submitted correct coordinates, do not lock
                         if($lockCoordinates === true && count($tempUsers) == 0)
                         {
                             $lockCoordinates = false;
                         }
-                        
+
                         unset($tempCoordinates, $tempUsers);
                     }
                     else
@@ -331,12 +331,12 @@ class FSDJump extends Event
                         // No temporary coordinates, check if was trilaterared by EDSM and if all distance are good.
                         $distancesModel = new \Models_Distances;
                         $distances      = $distancesModel->getByRefSystem($currentSystem->getId());
-                        
+
                         if(is_array($distances) && count($distances) > 0)
                         {
                             $goodDistances  = 0;
                             $badDistances   = 0;
-                            
+
                             foreach($distances AS $distance)
                             {
                                 if($distance['ref_system1'] == $currentSystem->getId())
@@ -347,14 +347,14 @@ class FSDJump extends Event
                                 {
                                     $referenceSystem = \EDSM_System::getInstance($distance['ref_system1']);
                                 }
-                                
+
                                 if(!is_null($referenceSystem->getX()))
                                 {
                                     $calculatedDistance = round(
-                                        \EDSM_System_Distances::calculate($referenceSystem, $systemCoordinates) 
+                                        \EDSM_System_Distances::calculate($referenceSystem, $systemCoordinates)
                                         * 100
                                     );
-                                    
+
                                     if($calculatedDistance == $distance['distance'])
                                     {
                                         $goodDistances++;
@@ -365,14 +365,14 @@ class FSDJump extends Event
                                     }
                                 }
                             }
-                            
+
                             if($goodDistances >= 3 && $goodDistances > ($badDistances * 2))
                             {
                                 $lockCoordinates = true;
                             }
                         }
                     }
-                    
+
                     if($lockCoordinates === true)
                     {
                         $systemsModel->updateById(
@@ -382,7 +382,7 @@ class FSDJump extends Event
                                 'lastTrilateration' => new \Zend_Db_Expr('NULL'),
                             )
                         );
-                        
+
                         $systemsCoordinatesTempModel->deleteByRefSystem($currentSystem->getId());
                     }
                     else
@@ -394,7 +394,7 @@ class FSDJump extends Event
                                 'refUser'           => static::$user->getId(),
                                 'refSoftware'       => static::$softwareId,
                                 'dateSubmission'    => new \Zend_Db_Expr('NOW()'),
-                            ), 
+                            ),
                             $systemCoordinates
                         ));
                     }
@@ -411,15 +411,15 @@ class FSDJump extends Event
                             array(
                                 'coordinatesLocked' => 0,
                                 'lastTrilateration' => new \Zend_Db_Expr('NULL'),
-                            ), 
+                            ),
                             $systemCoordinates
                         )
                     );
-                    
+
                     $systemsFeaturedModel = new \Models_Systems_Featured;
                     $systemsFeaturedModel->deleteByRefSystem($currentSystem->getId());
                 }
-                
+
                 // Store temporary coordinates
                 $tempCoordinatesId = $systemsCoordinatesTempModel->insert(array_merge(
                     array(
@@ -427,18 +427,18 @@ class FSDJump extends Event
                         'refUser'           => static::$user->getId(),
                         'refSoftware'       => static::$softwareId,
                         'dateSubmission'    => new \Zend_Db_Expr('NOW()'),
-                    ), 
+                    ),
                     $systemCoordinates
                 ));
             }
         }
-        
+
         // We have found the right system
         if(!is_null($currentSystem))
         {
             $systemsLogsModel           = new \Models_Systems_Logs;
             static::$return['systemId'] = $currentSystem->getId();
-            
+
             // Check before/after flight logs
             $before = $systemsLogsModel->select()
                                        ->where('user = ?', static::$user->getId())
@@ -446,7 +446,7 @@ class FSDJump extends Event
                                        ->limit(1)
                                        ->order('dateVisited DESC');
             $before = $systemsLogsModel->fetchRow($before);
-            
+
             if(!is_null($before))
             {
                 if($before->system == $currentSystem->getId())
@@ -456,7 +456,7 @@ class FSDJump extends Event
                     {
                         static::$return['msgnum']   = 452;
                         static::$return['msg']      = 'An entry for the same system already exists just before the visited date (#' . $before->id . ').';
-                        
+
                         return static::$return;
                     }
                     else
@@ -467,7 +467,7 @@ class FSDJump extends Event
                     }
                 }
             }
-            
+
             $after  = $systemsLogsModel->select()
                                        ->where('user = ?', static::$user->getId())
                                        ->where('dateVisited > ?', $json['timestamp'])
@@ -483,7 +483,7 @@ class FSDJump extends Event
                     {
                         static::$return['msgnum']   = 453;
                         static::$return['msg']      = 'An entry for the same system already exists just after the visited date (#' . $after->id . ').';
-                        
+
                         return static::$return;
                     }
                     else
@@ -494,42 +494,42 @@ class FSDJump extends Event
                     }
                 }
             }
-            
+
             $insert                 = array();
             $insert['system']       = static::$return['systemId'];
             $insert['user']         = static::$user->getId();
             $insert['refSoftware']  = static::$softwareId;
             $insert['dateVisited']  = $json['timestamp'];
-            
+
             // Find the current shipID
             $currentShipId = static::findShipId($json);
-            
+
             if(!is_null($currentShipId))
             {
                 static::$return['shipId']   = (int) $currentShipId;
                 $insert['refShip']          = (int) $currentShipId;
             }
-            
+
             // Do we have the used Fuel?
             if(array_key_exists('FuelUsed', $json))
             {
                 $insert['fuelUsed'] = $json['FuelUsed'];
             }
-            
+
             // Do we have the jump distance?
             if(array_key_exists('JumpDist', $json))
             {
                 $insert['jumpDistance'] = $json['JumpDist'];
-                            
+
                 // BADGES
                 if($json['JumpDist'] >= 50) { static::$user->giveBadge(150); }
                 if($json['JumpDist'] >= 200) { static::$user->giveBadge(151); }
             }
-            
+
             // Check if statistics for distance to Sol/Colonia are greater
             $usersStatisticsModel = new \Models_Users_Statistics;
             $userStatistics         = $usersStatisticsModel->getByRefUser(static::$user->getId());
-            
+
             if(!is_null($userStatistics))
             {
                 // Already backfilled from the old logs, so update if greater
@@ -539,11 +539,11 @@ class FSDJump extends Event
                         \EDSM_System::getInstance(27), // Sol
                         $currentSystem
                     );
-                    
+
                     if($currentMaxDistance > $userStatistics['explorationGreatestDistanceFromSol'])
                     {
                         if($currentMaxDistance >= 65000) { static::$user->giveBadge(220); }
-                        
+
                         $usersStatisticsModel->updateByRefUser(
                             static::$user->getId(),
                             [
@@ -552,7 +552,7 @@ class FSDJump extends Event
                         );
                     }
                 }
-                
+
                 // Already backfilled from the old logs, so update if greater
                 if(!is_null($userStatistics['explorationGreatestDistanceFromColonia']))
                 {
@@ -560,7 +560,7 @@ class FSDJump extends Event
                         \EDSM_System::getInstance(3384966), // Colonia
                         $currentSystem
                     );
-                    
+
                     if($currentMaxDistance > $userStatistics['explorationGreatestDistanceFromColonia'])
                     {
                         $usersStatisticsModel->updateByRefUser(
@@ -572,7 +572,7 @@ class FSDJump extends Event
                     }
                 }
             }
-            
+
             // Check if flight log already exists
             try
             {
@@ -584,18 +584,18 @@ class FSDJump extends Event
                 {
                     static::$return['msgnum']   = 101;
                     static::$return['msg']      = 'Message already stored';
-                    
+
                     // Find the current flight log
                     $same = $systemsLogsModel->select()
                                              ->where('system = ?', static::$return['systemId'])
                                              ->where('user = ?', static::$user->getId())
                                              ->where('dateVisited = ?', $json['timestamp']);
                     $same = $systemsLogsModel->fetchRow($same);
-                    
+
                     if(!is_null($same))
                     {
                         $update = array();
-                        
+
                         // Ship id?
                         if(!is_null($currentShipId))
                         {
@@ -604,7 +604,7 @@ class FSDJump extends Event
                                 $update['refShip'] = $currentShipId;
                             }
                         }
-                        
+
                         if(array_key_exists('FuelUsed', $json))
                         {
                             if($json['FuelUsed'] != $same->fuelUsed)
@@ -612,28 +612,28 @@ class FSDJump extends Event
                                 $update['fuelUsed'] = $json['FuelUsed'];
                             }
                         }
-                        
+
                         if(array_key_exists('JumpDist', $json))
                         {
                             if($json['JumpDist'] != $same->jumpDistance)
                             {
                                 $update['jumpDistance'] = $json['JumpDist'];
                             }
-                            
+
                             // BADGES
                             if($json['JumpDist'] >= 50) { static::$user->giveBadge(150); }
                             if($json['JumpDist'] >= 200) { static::$user->giveBadge(151); }
                         }
-                        
+
                         // Update if needed
                         if(count($update) > 0)
                         {
                             $systemsLogsModel->updateById($same->id, $update);
                         }
-                        
+
                         unset($update);
                     }
-                    
+
                     unset($same);
                 }
                 else
@@ -641,23 +641,23 @@ class FSDJump extends Event
                     static::$return['msgnum']   = 500;
                     static::$return['msg']      = 'Exception: ' . $e->getMessage();
                 }
-                
+
                 unset($flightLogId);
             }
-            
+
             // Update ship current system and fuel if needed
             if(is_null($after) && !is_null($currentShipId))
             {
                 static::updateCurrentGameShipId($currentShipId, $json['timestamp']);
-                
+
                 $usersShipsModel    = new \Models_Users_Ships;
                 $currentShipId      = static::$user->getShipById($currentShipId);
-                
+
                 if(!is_null($currentShipId))
                 {
                     $currentShip    = $usersShipsModel->getById($currentShipId);
                     $update         = array();
-                    
+
                     // Update fuel
                     if(!array_key_exists('fuelUpdated', $currentShip) || is_null($currentShip['fuelUpdated']) || strtotime($currentShip['fuelUpdated']) < strtotime($json['timestamp']))
                     {
@@ -667,7 +667,7 @@ class FSDJump extends Event
                             $update['fuelUpdated']       = $json['timestamp'];
                         }
                     }
-                    
+
                     // Update position
                     if(!array_key_exists('locationUpdated', $currentShip) || is_null($currentShip['locationUpdated']) || strtotime($currentShip['locationUpdated']) < strtotime($json['timestamp']))
                     {
@@ -675,21 +675,21 @@ class FSDJump extends Event
                         $update['refStation']       = new \Zend_Db_Expr('NULL');
                         $update['locationUpdated']  = $json['timestamp'];
                     }
-                    
+
                     if(count($update) > 0)
                     {
                         $usersShipsModel->updateById($currentShipId, $update);
                     }
-                    
+
                     unset($update);
                 }
             }
-            
+
             // Update temp coordinates with the reference log or delete if no further flight log
             if(isset($tempCoordinatesId))
             {
                 $systemsCoordinatesTempModel = new \Models_Systems_CoordinatesTemp;
-                
+
                 if(isset($flightLogId))
                 {
                     $systemsCoordinatesTempModel->updateById(
@@ -704,15 +704,15 @@ class FSDJump extends Event
                     $systemsCoordinatesTempModel->deleteById($tempCoordinatesId);
                 }
             }
-            
+
             unset($systemsCoordinatesTempModel);
-            
+
             // Handle faction reputation?
             if(array_key_exists('Factions', $json))
             {
                 static::handleMyReputation($json['Factions'], $json['timestamp']);
             }
-            
+
             // Handle system power?
             if(array_key_exists('Powers', $json) && array_key_exists('PowerplayState', $json))
             {
@@ -722,7 +722,7 @@ class FSDJump extends Event
             {
                 // Check if user still involved in powerplay, if not delete everything
                 $userPower = static::$user->getPower();
-                
+
                 if(is_null($userPower) && strtotime(static::$user->getPowerLastUpdate()) <= strtotime($json['timestamp']))
                 {
                     $systemsPowerplayModel  = new \Models_Systems_Powerplay;
@@ -731,16 +731,16 @@ class FSDJump extends Event
                 }
             }
         }
-        
+
         return static::$return;
     }
-    
+
     private static function doPowerplay($refSystem, $json)
     {
         $systemsPowerplayModel  = new \Models_Systems_Powerplay;
         $currentPowerplay       = $systemsPowerplayModel->getByRefSystem($refSystem);
         $updatePowerplay        = true;
-        
+
         if(!is_null($currentPowerplay))
         {
             foreach($currentPowerplay AS $powerplay)
@@ -751,16 +751,16 @@ class FSDJump extends Event
                 }
             }
         }
-        
+
         if($updatePowerplay === true)
         {
             $systemsPowerplayModel->deleteByRefSystem($refSystem);
-            
+
             foreach($json['Powers'] AS $power)
             {
                 // Check if power is known in EDSM
                 $powerId        = \Alias\System\Power::getFromFd($power);
-                
+
                 if(!is_null($powerId))
                 {
                     try
@@ -786,14 +786,15 @@ class FSDJump extends Event
                 }
             }
         }
-        
+
         unset($systemsPowerplayModel, $currentPowerplay);
     }
-    
+
     public static function handleMyReputation($factions, $timestamp)
     {
+        $factionsModel      = new \Models_Factions;
         $usersFactionsModel = new \Models_Users_Factions;
-        
+
         foreach($factions AS $faction)
         {
             if(!array_key_exists('MyReputation', $faction))
@@ -801,7 +802,7 @@ class FSDJump extends Event
                 // Old journal, exit the loop
                 break;
             }
-            
+
             $faction['Name']    = trim($faction['Name']);
             $factionId          = null;
 
@@ -835,7 +836,7 @@ class FSDJump extends Event
                         {
                             $factionId = null;
                         }
-                    } 
+                    }
                 }
                 */
             }
@@ -843,9 +844,9 @@ class FSDJump extends Event
             if(!is_null($factionId) && array_key_exists('id', $factionId))
             {
                 $factionId = $factionId['id'];
-                
+
                 $currentReputation = $usersFactionsModel->getByRefUserAndRefFaction(static::$user->getId(), $factionId);
-                
+
                 if(is_null($currentReputation))
                 {
                     $insert                         = array();
@@ -853,9 +854,9 @@ class FSDJump extends Event
                     $insert['refFaction']           = $factionId;
                     $insert['reputation']           = $faction['MyReputation'];
                     $insert['lastReputationUpdate'] = $timestamp;
-                    
+
                     $usersFactionsModel->inser($insert);
-                    
+
                     unset($insert);
                 }
                 else
@@ -865,21 +866,21 @@ class FSDJump extends Event
                         $update                         = array();
                         $update['reputation']           = $faction['MyReputation'];
                         $update['lastReputationUpdate'] = $timestamp;
-                        
+
                         $usersFactionsModel->updateByRefUserAndRefFaction(
                             static::$user->getId(),
                             $factionId,
                             $update
                         );
-                        
+
                         unset($update);
                     }
                 }
             }
         }
-        
+
         unset($usersFactionsModel);
-        
+
         return;
     }
 }

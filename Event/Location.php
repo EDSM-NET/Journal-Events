@@ -15,80 +15,77 @@ class Location extends Event
     protected static $description   = [
         'Update ship current system/station.',
     ];
-    
-    
-    
+
+
+
     public static function run($json)
     {
         if(array_key_exists('Docked', $json) && $json['Docked'] === true)
         {
             $stationId = static::findStationId($json);
-            
+
             if(!is_null($stationId))
             {
                 $station        = \EDSM_System_Station::getInstance($stationId);
                 $system         = $station->getSystem();
                 $currentShipId  = static::findShipId($json);
-                
+
                 // Update ship parking
                 if(!is_null($currentShipId))
                 {
                     static::updateCurrentGameShipId($currentShipId, $json['timestamp']);
-                    
+
                     $usersShipsModel    = new \Models_Users_Ships;
                     $currentShipId      = static::$user->getShipById($currentShipId);
-                    
+
                     if(!is_null($currentShipId))
                     {
                         $currentShip    = $usersShipsModel->getById($currentShipId);
                         $update         = array();
-                        
+
                         if(!array_key_exists('locationUpdated', $currentShip) || is_null($currentShip['locationUpdated']) || strtotime($currentShip['locationUpdated']) < strtotime($json['timestamp']))
                         {
                             $update['refSystem']        = (int) $system->getId();
                             $update['refStation']       = (int) $station->getId();
                             $update['locationUpdated']  = $json['timestamp'];
                         }
-                        
+
                         if(count($update) > 0)
                         {
                             $usersShipsModel->updateById($currentShipId, $update);
                         }
-                        
+
                         unset($update);
                     }
-                    
+
                     unset($usersShipsModel);
                 }
-                
+
                 unset($currentShipId);
-                
-                // Give badge
-                if($system->getId() == 28107130
-                     && strtotime($json['timestamp']) > strtotime('2018-09-01 00:00:00') && strtotime($json['timestamp']) < strtotime('2018-09-30 00:00:00'))
-                {
-                    static::$user->giveBadge(550);
-                }
-                if($system->getId() == 4351697 && $station->getId() == 42167
-                     && strtotime($json['timestamp']) > strtotime('2018-09-01 00:00:00') && strtotime($json['timestamp']) < strtotime('2018-09-30 00:00:00'))
-                {
-                    static::$user->giveBadge(551);
-                }
+            }
+
+            // Give badge
+            if(array_key_exists('SystemAddress', $json) && $json['SystemAddress'] == 216770054355
+                && array_key_exists('MarketID', $json) && $json['MarketID'] == 128774957
+                && strtotime($json['timestamp']) > strtotime('2018-09-01 00:00:00') && strtotime($json['timestamp']) < strtotime('2018-09-30 23:59:59'))
+            {
+                static::$user->giveBadge(551);
             }
         }
-        
+
         if(array_key_exists('Factions', $json))
         {
             static::handleMyReputation($json['Factions'], $json['timestamp']);
         }
-        
+
         return static::$return;
     }
-    
+
     public static function handleMyReputation($factions, $timestamp)
     {
+        $factionsModel      = new \Models_Factions;
         $usersFactionsModel = new \Models_Users_Factions;
-        
+
         foreach($factions AS $faction)
         {
             if(!array_key_exists('MyReputation', $faction))
@@ -96,7 +93,7 @@ class Location extends Event
                 // Old journal, exit the loop
                 break;
             }
-            
+
             $faction['Name']    = trim($faction['Name']);
             $factionId          = null;
 
@@ -130,7 +127,7 @@ class Location extends Event
                         {
                             $factionId = null;
                         }
-                    } 
+                    }
                 }
                 */
             }
@@ -138,9 +135,9 @@ class Location extends Event
             if(!is_null($factionId) && array_key_exists('id', $factionId))
             {
                 $factionId = $factionId['id'];
-                
+
                 $currentReputation = $usersFactionsModel->getByRefUserAndRefFaction(static::$user->getId(), $factionId);
-                
+
                 if(is_null($currentReputation))
                 {
                     $insert                         = array();
@@ -148,9 +145,9 @@ class Location extends Event
                     $insert['refFaction']           = $factionId;
                     $insert['reputation']           = $faction['MyReputation'];
                     $insert['lastReputationUpdate'] = $timestamp;
-                    
+
                     $usersFactionsModel->inser($insert);
-                    
+
                     unset($insert);
                 }
                 else
@@ -160,21 +157,21 @@ class Location extends Event
                         $update                         = array();
                         $update['reputation']           = $faction['MyReputation'];
                         $update['lastReputationUpdate'] = $timestamp;
-                        
+
                         $usersFactionsModel->updateByRefUserAndRefFaction(
                             static::$user->getId(),
                             $factionId,
                             $update
                         );
-                        
+
                         unset($update);
                     }
                 }
             }
         }
-        
+
         unset($usersFactionsModel);
-        
+
         return;
     }
 }
