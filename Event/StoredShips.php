@@ -75,7 +75,7 @@ class StoredShips extends Event
                     {
                         $usersShipsModel->insert($insert);
                     }
-                    catch(Exception $ex)
+                    catch(\Zend_Db_Exception $e)
                     {
                         // Based on unique index, this ship entry was already saved.
                         if(strpos($e->getMessage(), '1062 Duplicate') !== false)
