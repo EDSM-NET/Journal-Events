@@ -120,13 +120,13 @@ class FSDJump extends Event
 
                 if(!is_null($systemId))
                 {
-                    $currentSystem = \EDSM_System::getInstance($systemId);
+                    $currentSystem = \Component\System::getInstance($systemId);
                 }
             }
             // System already exists
             else
             {
-                $currentSystem = \EDSM_System::getInstance($system['id']);
+                $currentSystem = \Component\System::getInstance($system['id']);
 
                 // Check system renamed/merged to another
                 if($currentSystem->isHidden() === true)
@@ -136,7 +136,7 @@ class FSDJump extends Event
                     if(!is_null($mergedTo))
                     {
                         // Switch systems when they have been renamed
-                        $currentSystem = \EDSM_System::getInstance($mergedTo);
+                        $currentSystem = \Component\System::getInstance($mergedTo);
                     }
                     else
                     {
@@ -180,13 +180,13 @@ class FSDJump extends Event
                         {
                             foreach($duplicates AS $duplicate)
                             {
-                                $currentSystemTest  = \EDSM_System::getInstance($duplicate);
+                                $currentSystemTest  = \Component\System::getInstance($duplicate);
 
                                 // Try to follow hidden system
                                 $mergedTo = $currentSystemTest->getMergedTo();
                                 if($currentSystemTest->isHidden() === true && !is_null($mergedTo))
                                 {
-                                    $currentSystemTest = \EDSM_System::getInstance($mergedTo);
+                                    $currentSystemTest = \Component\System::getInstance($mergedTo);
                                 }
 
                                 // We do not want to create a new duplicate if one of them is not green
@@ -243,7 +243,7 @@ class FSDJump extends Event
                                 $newId                  = $systemsModel->insert($insertSystem);
 
                                 // Switch current system
-                                $currentSystem                      = \EDSM_System::getInstance($newId);
+                                $currentSystem                      = \Component\System::getInstance($newId);
                                 static::$return['systemCreated']    = true;
                             }
                             catch(\Zend_Db_Exception $e)
@@ -341,11 +341,11 @@ class FSDJump extends Event
                             {
                                 if($distance['ref_system1'] == $currentSystem->getId())
                                 {
-                                    $referenceSystem = \EDSM_System::getInstance($distance['ref_system2']);
+                                    $referenceSystem = \Component\System::getInstance($distance['ref_system2']);
                                 }
                                 else
                                 {
-                                    $referenceSystem = \EDSM_System::getInstance($distance['ref_system1']);
+                                    $referenceSystem = \Component\System::getInstance($distance['ref_system1']);
                                 }
 
                                 if(!is_null($referenceSystem->getX()))
@@ -536,7 +536,7 @@ class FSDJump extends Event
                 if(!is_null($userStatistics['explorationGreatestDistanceFromSol']))
                 {
                     $currentMaxDistance = \EDSM_System_Distances::calculate(
-                        \EDSM_System::getInstance(27), // Sol
+                        \Component\System::getInstance(27), // Sol
                         $currentSystem
                     );
 
@@ -557,7 +557,7 @@ class FSDJump extends Event
                 if(!is_null($userStatistics['explorationGreatestDistanceFromColonia']))
                 {
                     $currentMaxDistance = \EDSM_System_Distances::calculate(
-                        \EDSM_System::getInstance(3384966), // Colonia
+                        \Component\System::getInstance(3384966), // Colonia
                         $currentSystem
                     );
 

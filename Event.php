@@ -349,7 +349,7 @@ class Event
 
             if(!is_null($system))
             {
-                $currentSystem = \EDSM_System::getInstance($system['id']);
+                $currentSystem = \Component\System::getInstance($system['id']);
 
                 // Check system renamed/merged to another
                 if($currentSystem->isHidden() === true)
@@ -359,7 +359,7 @@ class Event
                     if(!is_null($mergedTo) && $preventRenamedSystems === false)
                     {
                         // Switch systems when they have been renamed
-                        $currentSystem = \EDSM_System::getInstance($mergedTo);
+                        $currentSystem = \Component\System::getInstance($mergedTo);
                     }
                     else
                     {
@@ -383,7 +383,7 @@ class Event
                         {
                             foreach($duplicates AS $duplicate)
                             {
-                                $duplicateSystem = \EDSM_System::getInstance($duplicate);
+                                $duplicateSystem = \Component\System::getInstance($duplicate);
 
                                 if($systemCoordinates['x'] == $duplicateSystem->getX() && $systemCoordinates['y'] == $duplicateSystem->getY() && $systemCoordinates['z'] == $duplicateSystem->getZ())
                                 {
@@ -495,7 +495,7 @@ class Event
 
             if(!is_null($systemId))
             {
-                $currentSystem  = \EDSM_System::getInstance($systemId);
+                $currentSystem  = \Component\System::getInstance($systemId);
                 $stations       = $currentSystem->getStations();
 
                 foreach($stations AS $station)
