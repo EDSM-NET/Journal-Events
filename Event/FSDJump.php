@@ -7,6 +7,8 @@
 namespace   Journal\Event;
 use         Journal\Event;
 
+use         Alias\Station\Engineer;
+
 class FSDJump extends Event
 {
     protected static $isOK          = true;
@@ -792,94 +794,118 @@ class FSDJump extends Event
 
     public static function handleMyReputation($factions, $timestamp)
     {
-        $factionsModel      = new \Models_Factions;
-        $usersFactionsModel = new \Models_Users_Factions;
-
-        foreach($factions AS $faction)
+        try
         {
-            if(!array_key_exists('MyReputation', $faction))
+            $factionsModel      = new \Models_Factions;
+            $usersFactionsModel = new \Models_Users_Factions;
+
+            foreach($factions AS $faction)
             {
-                // Old journal, exit the loop
-                break;
+                if(!array_key_exists('MyReputation', $faction))
+                {
+                    // Old journal, exit the loop
+                    break;
+                }
+
+                $faction['Name']    = trim($faction['Name']);
+                $factionId          = null;
+
+                if(!empty($faction['Name']) && !in_array($faction['Name'], Engineer::getAll()))
+                {
+                    // Special continue case for Pilots Federation Local Branch
+                    if($faction['Name'] == 'Pilots Federation Local Branch' && $faction['Influence'] == 0)
+                    {
+                        continue;
+                    }
+
+                    $factionId          = $factionsModel->getByName($faction['Name']);
+
+                    /*
+                    //TODO: Handle a trait to add faction insertion, for now we will simply ignore things until we got the faction from EDDN
+                    if(is_null($factionId))
+                    {
+                        try
+                        {
+                            $insert     = array('name' => $faction['Name']);
+                            $factionId  = $factionsModel->insert($insert);
+                            $factionId  = array('id' => $factionId);
+                        }
+                        catch(\Zend_Db_Exception $e)
+                        {
+                            if(strpos($e->getMessage(), '1062 Duplicate') !== false) // Can happen when the same faction is submitted twice during the process
+                            {
+                                $factionId = $factionsModel->getByName($faction['Name']);
+                            }
+                            else
+                            {
+                                $factionId = null;
+                            }
+                        }
+                    }
+                    */
+                }
+
+                if(!is_null($factionId) && array_key_exists('id', $factionId))
+                {
+                    $factionId = $factionId['id'];
+
+                    $currentReputation = $usersFactionsModel->getByRefUserAndRefFaction(static::$user->getId(), $factionId);
+
+                    if(is_null($currentReputation))
+                    {
+                        $insert                         = array();
+                        $insert['refUser']              = static::$user->getId();
+                        $insert['refFaction']           = $factionId;
+                        $insert['reputation']           = $faction['MyReputation'];
+                        $insert['lastReputationUpdate'] = $timestamp;
+
+                        $usersFactionsModel->insert($insert);
+
+                        unset($insert);
+                    }
+                    else
+                    {
+                        if($currentReputation['lastReputationUpdate'] < strtotime($timestamp))
+                        {
+                            $update                         = array();
+                            $update['reputation']           = $faction['MyReputation'];
+                            $update['lastReputationUpdate'] = $timestamp;
+
+                            $usersFactionsModel->updateByRefUserAndRefFaction(
+                                static::$user->getId(),
+                                $factionId,
+                                $update
+                            );
+
+                            unset($update);
+                        }
+                    }
+                }
             }
 
-            $faction['Name']    = trim($faction['Name']);
-            $factionId          = null;
-
-            if(!empty($faction['Name']) && !in_array($faction['Name'], Engineer::getAll()))
+            unset($usersFactionsModel);
+        }
+        catch(\Zend_Db_Exception $e)
+        {
+            // Based on unique index, this entry was already saved.
+            if(strpos($e->getMessage(), '1062 Duplicate') !== false)
             {
-                // Special continue case for Pilots Federation Local Branch
-                if($faction['Name'] == 'Pilots Federation Local Branch' && $faction['Influence'] == 0)
-                {
-                    continue;
-                }
-
-                $factionId          = $factionsModel->getByName($faction['Name']);
-
-                /*
-                //TODO: Handle a trait to add faction insertion, for now we will simply ignore things until we got the faction from EDDN
-                if(is_null($factionId))
-                {
-                    try
-                    {
-                        $insert     = array('name' => $faction['Name']);
-                        $factionId  = $factionsModel->insert($insert);
-                        $factionId  = array('id' => $factionId);
-                    }
-                    catch(\Zend_Db_Exception $e)
-                    {
-                        if(strpos($e->getMessage(), '1062 Duplicate') !== false) // Can happen when the same faction is submitted twice during the process
-                        {
-                            $factionId = $factionsModel->getByName($faction['Name']);
-                        }
-                        else
-                        {
-                            $factionId = null;
-                        }
-                    }
-                }
-                */
+                return;
             }
-
-            if(!is_null($factionId) && array_key_exists('id', $factionId))
+            else
             {
-                $factionId = $factionId['id'];
+                static::$return['msgnum']   = 500;
+                static::$return['msg']      = 'Exception: ' . $e->getMessage();
 
-                $currentReputation = $usersFactionsModel->getByRefUserAndRefFaction(static::$user->getId(), $factionId);
+                $registry = \Zend_Registry::getInstance();
 
-                if(is_null($currentReputation))
+                if($registry->offsetExists('sentryClient'))
                 {
-                    $insert                         = array();
-                    $insert['refUser']              = static::$user->getId();
-                    $insert['refFaction']           = $factionId;
-                    $insert['reputation']           = $faction['MyReputation'];
-                    $insert['lastReputationUpdate'] = $timestamp;
-
-                    $usersFactionsModel->inser($insert);
-
-                    unset($insert);
-                }
-                else
-                {
-                    if($currentReputation['lastReputationUpdate'] < strtotime($timestamp))
-                    {
-                        $update                         = array();
-                        $update['reputation']           = $faction['MyReputation'];
-                        $update['lastReputationUpdate'] = $timestamp;
-
-                        $usersFactionsModel->updateByRefUserAndRefFaction(
-                            static::$user->getId(),
-                            $factionId,
-                            $update
-                        );
-
-                        unset($update);
-                    }
+                    $sentryClient = $registry->offsetGet('sentryClient');
+                    $sentryClient->captureException($e);
                 }
             }
         }
-
-        unset($usersFactionsModel);
 
         return;
     }
