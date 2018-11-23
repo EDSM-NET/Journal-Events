@@ -24,6 +24,13 @@ class Cargo extends Event
             return static::$return;
         }
 
+        // 3.3: Skip Vessel: "SRV"
+        //TODO: Handle SRV cargo ;)
+        if(array_key_exists('Vessel', $json) && $json['Vessel'] == 'SRV')
+        {
+            return static::$return;
+        }
+
 
         $databaseModel  = new \Models_Users_Cargo;
         $aliasClass     = 'Alias\Station\Commodity\Type';
