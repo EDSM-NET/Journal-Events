@@ -201,7 +201,31 @@ class StoredShips extends Event
                         }
                     }
 
-                    $currentShipId = $usersShipsModel->insert($insert);
+                    try
+                    {
+                        $usersShipsModel->insert($insert);
+                    }
+                    catch(\Zend_Db_Exception $e)
+                    {
+                        // Based on unique index, this ship entry was already saved.
+                        if(strpos($e->getMessage(), '1062 Duplicate') !== false)
+                        {
+                            // CONTINUE...
+                        }
+                        else
+                        {
+                            static::$return['msgnum']   = 500;
+                            static::$return['msg']      = 'Exception: ' . $e->getMessage();
+
+                            $registry = \Zend_Registry::getInstance();
+
+                            if($registry->offsetExists('sentryClient'))
+                            {
+                                $sentryClient = $registry->offsetGet('sentryClient');
+                                $sentryClient->captureException($e);
+                            }
+                        }
+                    }
 
                     unset($insert);
                 }
