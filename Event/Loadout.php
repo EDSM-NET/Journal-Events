@@ -196,7 +196,38 @@ class Loadout extends Event
 
                                         if(!is_null($engineerId))
                                         {
-                                            $blueprintId        = \Alias\Station\Engineer\Blueprint\Type::getFromFd($module['Engineering']['BlueprintID']);
+                                            if(!array_key_exists('BlueprintID', $module['Engineering']))
+                                            {
+                                                $blueprintId = null;
+
+                                                // Try to guess it from name
+                                                if(array_key_exists('BlueprintName', $module['Engineering']))
+                                                {
+                                                    $guess = array_search(
+                                                        strtolower($module['Engineering']['BlueprintName']),
+                                                        \Alias\Station\Engineer\Blueprint\Type::$nameLoadout
+                                                    );
+
+                                                    if($guess !== false)
+                                                    {
+                                                        $blueprintId = $guess;
+                                                    }
+                                                    else
+                                                    {
+                                                        \EDSM_Api_Logger_Alias::log(
+                                                            'Alias\Station\Engineer\Blueprint\Type::$nameLoadout: ' . $module['Engineering']['BlueprintName'] . ' / ' . $module['Engineering']['Level'] . ' (Sofware#' . static::$softwareId . ')',
+                                                            [
+                                                                'file'  => __FILE__,
+                                                                'line'  => __LINE__,
+                                                            ]
+                                                        );
+                                                    }
+                                                }
+                                            }
+                                            else
+                                            {
+                                                $blueprintId        = \Alias\Station\Engineer\Blueprint\Type::getFromFd($module['Engineering']['BlueprintID']);
+                                            }
 
                                             if(!is_null($blueprintId))
                                             {
@@ -204,7 +235,14 @@ class Loadout extends Event
                                                 $engineering['blueprintId']     = $blueprintId;
                                                 $engineering['level']           = $module['Engineering']['Level'];
                                                 $engineering['quality']         = $module['Engineering']['Quality'];
-                                                $engineering['mods']            = $module['Engineering']['Modifiers'];
+                                                $engineering['mods']            = array();
+
+                                                // Loop modfules and remove unneeded fields ;)
+                                                foreach($module['Engineering']['Modifiers'] AS $moduleModifier)
+                                                {
+                                                    unset($moduleModifier['OriginalValue'], $moduleModifier['LessIsGood']);
+                                                    $engineering['mods'][] = $moduleModifier;
+                                                }
 
                                                 if(array_key_exists('ExperimentalEffect', $module['Engineering']))
                                                 {
@@ -228,7 +266,7 @@ class Loadout extends Event
 
                                                 $insertModule['engineering']    = \Zend_Json::encode($engineering);
                                             }
-                                            else
+                                            elseif(array_key_exists('BlueprintID', $module['Engineering']))
                                             {
                                                 \EDSM_Api_Logger_Alias::log(
                                                     'Alias\Station\Engineer\Blueprint\Type: ' . $module['Engineering']['BlueprintID'] . ' / ' . $module['Engineering']['BlueprintName'] . ' / ' . $module['Engineering']['Level'] . ' (Sofware#' . static::$softwareId . ')',

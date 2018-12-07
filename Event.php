@@ -68,6 +68,8 @@ class Event
         '$dolphin_cockpit_name;',
         '$eagle_cockpit_name;',
         '$empire_courier_cockpit_name;',
+        '$empire_trader_cockpit_name;',
+        '$empire_eagle_cockpit_name;',
         '$federation_corvette_cockpit_name;',
         '$federation_dropship_cockpit_name;',
         '$federation_dropship_mkii_cockpit_name;',
@@ -82,6 +84,7 @@ class Event
         '$type7_cockpit_name;',
         '$type9_military_cockpit_name;',
         '$typex_cockpit_name;',
+        '$viper_cockpit_name;',
         '$viper_mkiv_cockpit_name;',
         '$vulture_cockpit_name;',
     ];
