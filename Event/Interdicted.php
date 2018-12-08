@@ -13,9 +13,9 @@ class Interdicted extends Event
     protected static $description   = [
         'Link Interdiction to current system.',
     ];
-    
-    
-    
+
+
+
     public static function run($json)
     {
         // Convert Faction to Power
@@ -23,53 +23,47 @@ class Interdicted extends Event
         {
             $allegianceId   = \Alias\System\Allegiance::getFromFd($json['Power']);
             $powerId        = \Alias\System\Power::getFromFd($json['Faction']);
-            
+
             if(!is_null($allegianceId) && !is_null($powerId))
             {
-                $json['Power'] = $json['Faction']; 
+                $json['Power'] = $json['Faction'];
                 unset($json['Faction']);
             }
         }
-        
+
         // Check if power is known in EDSM
         if(array_key_exists('Power', $json))
         {
             $powerId        = \Alias\System\Power::getFromFd($json['Power']);
-            
+
             if(is_null($powerId))
             {
                 static::$return['msgnum']   = 402;
                 static::$return['msg']      = 'Item unknown';
-                
-                \EDSM_Api_Logger_Alias::log(
-                    'Alias\System\Power: ' . $json['Power'] . ' (Sofware#' . static::$softwareId . ')',
-                    [
-                        'file'  => __FILE__,
-                        'line'  => __LINE__,
-                    ]
-                );
-                
+
+                \EDSM_Api_Logger_Alias::log('Alias\System\Power: ' . $json['Power']);
+
                 // Save in temp table for reparsing
                 $json['isError']            = 1;
                 \Journal\Event::run($json);
-                
+
                 return static::$return;
             }
         }
-        
+
         $systemId = static::findSystemId($json);
-        
+
         if(!is_null($systemId))
         {
             $systemsInterdictionsModel = new \Models_Systems_Interdictions;
-            
+
             $isAlreadyStored   = $systemsInterdictionsModel->fetchRow(
                 $systemsInterdictionsModel->select()
                                   ->where('refInterdicted = ?', static::$user->getId())
                                   ->where('refSystem = ?', $systemId)
                                   ->where('dateEvent = ?', $json['timestamp'])
             );
-            
+
             if(is_null($isAlreadyStored))
             {
                 $insert                         = array();
@@ -77,12 +71,12 @@ class Interdicted extends Event
                 $insert['refInterdicted']       = static::$user->getId();
                 $insert['isPlayerInterdicted']  = 1;
                 $insert['dateEvent']            = $json['timestamp'];
-                
+
                 if(array_key_exists('Power', $json) && !is_null($powerId))
                 {
                     $insert['refPower'] = $powerId;
                 }
-                
+
                 if(array_key_exists('Submitted', $json) && $json['Submitted'] === true)
                 {
                     $insert['isSuccess'] = 1;
@@ -91,22 +85,22 @@ class Interdicted extends Event
                 {
                     $insert['isSuccess'] = 0;
                 }
-                
+
                 if(array_key_exists('IsPlayer', $json) && $json['IsPlayer'] === true)
                 {
                     $insert['isPlayerInterdictor']  = 1;
-                    
+
                     if(array_key_exists('CombatRank', $json))
                     {
                         $insert['combatRank'] = $json['CombatRank'];
                     }
-                    
+
                     if(array_key_exists('Interdictor', $json))
                     {
                         // Try to find the current player
                         $usersModel = new \Models_Users;
                         $isUser     = $usersModel->getByName($json['Interdictor']);
-                        
+
                         if(!is_null($isUser))
                         {
                             $insert['refInterdictor']       = $isUser['id'];
@@ -115,7 +109,7 @@ class Interdicted extends Event
                         {
                             $insert['nameInterdictor']      = $json['Interdictor'];
                         }
-                        
+
                         unset($usersModel, $isUser);
                     }
                 }
@@ -125,15 +119,15 @@ class Interdicted extends Event
                     {
                         $insert['nameInterdictor']      = $json['Interdictor'];
                     }
-                    
+
                     $insert['isPlayerInterdictor']  = 0;
                 }
-                
+
                 if(array_key_exists('Faction', $json) && !empty($json['Faction']))
                 {
                     $factionsModel      = new \Models_Factions;
                     $currentFaction     = $factionsModel->getByName($json['Faction']);
-                    
+
                     if(!is_null($currentFaction))
                     {
                         $currentFactionId = $currentFaction['id'];
@@ -142,14 +136,14 @@ class Interdicted extends Event
                     {
                         $currentFactionId = $factionsModel->insert(['name' => $json['Faction']]);
                     }
-                    
+
                     $insert['refFaction'] = (int) $currentFactionId;
-                    
+
                     unset($factionsModel, $currentFaction, $currentFactionId);
                 }
-                
+
                 $systemsInterdictionsModel->insert($insert);
-                
+
                 unset($insert);
             }
             else
@@ -157,10 +151,10 @@ class Interdicted extends Event
                 static::$return['msgnum']   = 101;
                 static::$return['msg']      = 'Message already stored';
             }
-            
+
             unset($systemsInterdictionsModel, $isAlreadyStored);
         }
-        
+
         return static::$return;
     }
 }

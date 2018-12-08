@@ -35,13 +35,7 @@ class StoredShips extends Event
                     static::$return['msgnum']   = 402;
                     static::$return['msg']      = 'Item unknown (' . $ship['ShipType'] . ')';
 
-                    \EDSM_Api_Logger_Alias::log(
-                        'Alias\Ship\Type: ' . $ship['ShipType'] . ' (Sofware#' . static::$softwareId . ')',
-                        [
-                            'file'  => __FILE__,
-                            'line'  => __LINE__,
-                        ]
-                    );
+                    \EDSM_Api_Logger_Alias::log('Alias\Ship\Type: ' . $ship['ShipType']);
 
                     continue;
                 }
@@ -165,13 +159,7 @@ class StoredShips extends Event
                     static::$return['msgnum']   = 402;
                     static::$return['msg']      = 'Item unknown (' . $ship['ShipType'] . ')';
 
-                    \EDSM_Api_Logger_Alias::log(
-                        'Alias\Ship\Type: ' . $ship['ShipType'] . ' (Sofware#' . static::$softwareId . ')',
-                        [
-                            'file'  => __FILE__,
-                            'line'  => __LINE__,
-                        ]
-                    );
+                    \EDSM_Api_Logger_Alias::log('Alias\Ship\Type: ' . $ship['ShipType']);
 
                     continue;
                 }

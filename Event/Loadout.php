@@ -54,13 +54,7 @@ class Loadout extends Event
                 static::$return['msgnum']   = 402;
                 static::$return['msg']      = 'Item unknown (' . $json['Ship'] . ')';
 
-                \EDSM_Api_Logger_Alias::log(
-                    'Alias\Ship\Type: ' . $json['Ship'] . ' (Sofware#' . static::$softwareId . ')',
-                    [
-                        'file'  => __FILE__,
-                        'line'  => __LINE__,
-                    ]
-                );
+                \EDSM_Api_Logger_Alias::log('Alias\Ship\Type: ' . $json['Ship']);
 
                 return static::$return;
             }
@@ -214,13 +208,7 @@ class Loadout extends Event
                                                     }
                                                     else
                                                     {
-                                                        \EDSM_Api_Logger_Alias::log(
-                                                            'Alias\Station\Engineer\Blueprint\Type::$nameLoadout: ' . $module['Engineering']['BlueprintName'] . ' / ' . $module['Engineering']['Level'] . ' (Sofware#' . static::$softwareId . ')',
-                                                            [
-                                                                'file'  => __FILE__,
-                                                                'line'  => __LINE__,
-                                                            ]
-                                                        );
+                                                        \EDSM_Api_Logger_Alias::log('Alias\Station\Engineer\Blueprint\Type::$nameLoadout: ' . $module['Engineering']['BlueprintName'] . ' / ' . $module['Engineering']['Level']);
                                                     }
                                                 }
                                             }
@@ -256,34 +244,16 @@ class Loadout extends Event
 
                                                             if(is_null($getOriginalValue))
                                                             {
-                                                                \EDSM_Api_Logger_Alias::log(
-                                                                    'Outfitting original value missing: ' . $useClass . '::' . $insertModule['refOutfitting'] . ': ' . $moduleModifier['OriginalValue'] . ' (Sofware#' . static::$softwareId . ')',
-                                                                    [
-                                                                        'file'  => __FILE__,
-                                                                        'line'  => __LINE__,
-                                                                    ]
-                                                                );
+                                                                \EDSM_Api_Logger_Alias::log('Outfitting original value missing: ' . $useClass . '::' . $insertModule['refOutfitting'] . ': ' . $moduleModifier['OriginalValue']);
                                                             }
                                                             elseif($getOriginalValue != $moduleModifier['OriginalValue'])
                                                             {
-                                                                \EDSM_Api_Logger_Alias::log(
-                                                                    'Outfitting original value wrong: ' . $useClass . '::' . $insertModule['refOutfitting'] . ': ' . $moduleModifier['OriginalValue'] . ' (Sofware#' . static::$softwareId . ')',
-                                                                    [
-                                                                        'file'  => __FILE__,
-                                                                        'line'  => __LINE__,
-                                                                    ]
-                                                                );
+                                                                \EDSM_Api_Logger_Alias::log('Outfitting original value wrong: ' . $useClass . '::' . $insertModule['refOutfitting'] . ': ' . $moduleModifier['OriginalValue']);
                                                             }
                                                         }
                                                         else
                                                         {
-                                                            \EDSM_Api_Logger_Alias::log(
-                                                                'Outfitting class do not exists: ' . $useClass . ' (Sofware#' . static::$softwareId . ')',
-                                                                [
-                                                                    'file'  => __FILE__,
-                                                                    'line'  => __LINE__,
-                                                                ]
-                                                            );
+                                                            \EDSM_Api_Logger_Alias::log('Outfitting class do not exists: ' . $useClass);
                                                         }
                                                     }
                                                     /**/
@@ -301,13 +271,7 @@ class Loadout extends Event
                                                     }
                                                     else
                                                     {
-                                                        \EDSM_Api_Logger_Alias::log(
-                                                            'Alias\Station\Engineer\Effect\Type: ' . $module['Engineering']['ExperimentalEffect'] . ' / ' . $module['Engineering']['ExperimentalEffect_Localised'] . ' (Sofware#' . static::$softwareId . ')',
-                                                            [
-                                                                'file'  => __FILE__,
-                                                                'line'  => __LINE__,
-                                                            ]
-                                                        );
+                                                        \EDSM_Api_Logger_Alias::log('Alias\Station\Engineer\Effect\Type: ' . $module['Engineering']['ExperimentalEffect']);
                                                     }
                                                 }
 
@@ -315,24 +279,12 @@ class Loadout extends Event
                                             }
                                             elseif(array_key_exists('BlueprintID', $module['Engineering']))
                                             {
-                                                \EDSM_Api_Logger_Alias::log(
-                                                    'Alias\Station\Engineer\Blueprint\Type: ' . $module['Engineering']['BlueprintID'] . ' / ' . $module['Engineering']['BlueprintName'] . ' / ' . $module['Engineering']['Level'] . ' (Sofware#' . static::$softwareId . ')',
-                                                    [
-                                                        'file'  => __FILE__,
-                                                        'line'  => __LINE__,
-                                                    ]
-                                                );
+                                                \EDSM_Api_Logger_Alias::log('Alias\Station\Engineer\Blueprint\Type: ' . $module['Engineering']['BlueprintID'] . ' / ' . $module['Engineering']['BlueprintName'] . ' / ' . $module['Engineering']['Level']);
                                             }
                                         }
                                         else
                                         {
-                                            \EDSM_Api_Logger_Alias::log(
-                                                'Alias\Station\Engineer: ' . $module['Engineering']['EngineerID'] . ' / ' . $module['Engineering']['Engineer'] . ' (Sofware#' . static::$softwareId . ')',
-                                                [
-                                                    'file'  => __FILE__,
-                                                    'line'  => __LINE__,
-                                                ]
-                                            );
+                                            \EDSM_Api_Logger_Alias::log('Alias\Station\Engineer: ' . $module['Engineering']['EngineerID'] . ' / ' . $module['Engineering']['Engineer']);
                                         }
                                     }
 
@@ -373,25 +325,13 @@ class Loadout extends Event
                                 }
                                 else//if(!in_array($module['Item'], static::$excludedOutfitting))
                                 {
-                                    \EDSM_Api_Logger_Alias::log(
-                                        'Alias\Station\Outfitting\Type : ' . $module['Item'] . ' (Sofware#' . static::$softwareId . ')',
-                                        [
-                                            'file'  => __FILE__,
-                                            'line'  => __LINE__,
-                                        ]
-                                    );
+                                    \EDSM_Api_Logger_Alias::log('Alias\Station\Outfitting\Type : ' . $module['Item']);
                                 }
                             }
                         }
                         else//if(!in_array($module['Item'], static::$excludedOutfitting))
                         {
-                            \EDSM_Api_Logger_Alias::log(
-                                'Alias\Ship\Slot : ' . $module['Slot'] . ' (Sofware#' . static::$softwareId . ')',
-                                [
-                                    'file'  => __FILE__,
-                                    'line'  => __LINE__,
-                                ]
-                            );
+                            \EDSM_Api_Logger_Alias::log('Alias\Ship\Slot : ' . $module['Slot']);
                         }
 
                     }

@@ -13,41 +13,35 @@ class EjectCargo extends Event
     protected static $description   = [
         'Remove the cargo from the commander cargo hold.',
     ];
-    
-    
-    
+
+
+
     public static function run($json)
     {
         $databaseModel  = new \Models_Users_Cargo;
         $aliasClass     = 'Alias\Station\Commodity\Type';
-        
+
         // Check if cargo is known in EDSM
         $currentItemId = $aliasClass::getFromFd($json['Type']);
-        
+
         if(is_null($currentItemId))
         {
             static::$return['msgnum']   = 402;
             static::$return['msg']      = 'Item unknown';
-            
-            \EDSM_Api_Logger_Alias::log(
-                $aliasClass . ': ' . $json['Type'] . ' (Sofware#' . static::$softwareId . ')',
-                [
-                    'file'  => __FILE__,
-                    'line'  => __LINE__,
-                ]
-            );
-            
+
+            \EDSM_Api_Logger_Alias::log($aliasClass . ': ' . $json['Type']);
+
             // Save in temp table for reparsing
             $json['isError']            = 1;
             \Journal\Event::run($json);
-            
+
             return static::$return;
         }
-        
+
         // Find the current item ID
         $currentItem   = null;
         $currentItems  = $databaseModel->getByRefUser(static::$user->getId());
-        
+
         if(!is_null($currentItems))
         {
             foreach($currentItems AS $tempItem)
@@ -59,7 +53,7 @@ class EjectCargo extends Event
                 }
             }
         }
-        
+
         // If we have the line, update else, wait for the startUp events
         if(!is_null($currentItem))
         {
@@ -68,12 +62,12 @@ class EjectCargo extends Event
                 $update                 = array();
                 $update['total']        = max(0, $currentItem['total'] - $json['Count']);
                 $update['lastUpdate']   = $json['timestamp'];
-                
+
                 $databaseModel->updateById(
                     $currentItem['id'],
                     $update
                 );
-                
+
                 unset($update);
             }
             else
@@ -82,9 +76,9 @@ class EjectCargo extends Event
                 static::$return['msg']      = 'Message older than the stored one';
             }
         }
-        
+
         unset($databaseModel, $currentItems);
-        
+
         return static::$return;
     }
 }

@@ -14,9 +14,9 @@ class EngineerProgress extends Event
         'Update engineer(s) rank',
         'Update engineer(s) stage',
     ];
-    
-    
-    
+
+
+
     public static function run($json)
     {
         // Convert to multiple engineers
@@ -24,51 +24,51 @@ class EngineerProgress extends Event
         {
             $tempEngineer               = array();
             $tempEngineer['Engineer']   = $json['Engineer'];
-            
+
             if(array_key_exists('EngineerID', $json))
             {
                 $tempEngineer['EngineerID']           = $json['EngineerID'];
                 unset($json['EngineerID']);
             }
-            
+
             if(array_key_exists('Rank', $json))
             {
                 $tempEngineer['Rank']           = $json['Rank'];
                 unset($json['Rank']);
             }
-            
+
             if(array_key_exists('Progress', $json))
             {
                 $tempEngineer['Progress']       = $json['Progress'];
                 unset($json['Progress']);
             }
-            
+
             if(array_key_exists('RankProgress', $json))
             {
                 $tempEngineer['RankProgress']   = $json['RankProgress'];
                 unset($json['RankProgress']);
             }
-            
+
             $json['Engineers'] = array($tempEngineer);
-            
+
             unset($json['Engineer'], $json['EngineerID'], $tempEngineer);
         }
-        
+
         if(!array_key_exists('Engineers', $json))
         {
             static::$return['msgnum']   = 500;
             static::$return['msg']      = 'Message needs to be checked';
-            
+
             // Save in temp table for reparsing
             $json['isError']            = 1;
             \Journal\Event::run($json);
-            
+
             return static::$return;
         }
-        
+
         $usersEngineersModel    = new \Models_Users_Engineers;
         $currentEngineers       = $usersEngineersModel->getByRefUser(static::$user->getId());
-        
+
         foreach($json['Engineers'] AS $jsonEngineer)
         {
             // Check if Engineer is known in EDSM
@@ -79,13 +79,7 @@ class EngineerProgress extends Event
                 static::$return['msgnum']   = 402;
                 static::$return['msg']      = 'Item unknown';
 
-                \EDSM_Api_Logger_Alias::log(
-                    'Alias\Station\Engineer: ' . $jsonEngineer['Engineer'] . ' (Sofware#' . static::$softwareId . ')',
-                    [
-                        'file'  => __FILE__,
-                        'line'  => __LINE__,
-                    ]
-                );
+                \EDSM_Api_Logger_Alias::log('Alias\Station\Engineer: ' . $jsonEngineer['Engineer']);
 
                 // Save in temp table for reparsing
                 $json['isError']            = 1;
@@ -93,7 +87,7 @@ class EngineerProgress extends Event
 
                 return static::$return;
             }
-            
+
             $currentEngineer        = null;
             $lastEngineerUpdate     = strtotime('5YEAR AGO');
 
@@ -175,9 +169,9 @@ class EngineerProgress extends Event
                 static::$return['msg']      = 'Message older than the stored one';
             }
         }
-        
+
         unset($usersEngineersModel, $currentEngineers);
-        
+
         return static::$return;
     }
 }

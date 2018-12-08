@@ -27,7 +27,7 @@ class MissionAccepted extends Event
 
             if(array_key_exists('LocalisedName', $json))
             {
-                \EDSM_Api_Logger_Mission::log('Alias\Station\Mission\Type: ' . $json['Name'] . ' / ' . $json['LocalisedName'] . ' (Sofware#' . static::$softwareId . ')');
+                \EDSM_Api_Logger_Mission::log('Alias\Station\Mission\Type: ' . $json['Name'] . ' / ' . $json['LocalisedName']);
             }
 
             // Save in temp table for reparsing
@@ -46,13 +46,7 @@ class MissionAccepted extends Event
                 static::$return['msgnum']   = 402;
                 static::$return['msg']      = 'Item unknown';
 
-                \EDSM_Api_Logger_Alias::log(
-                    '\Alias\Station\Commodity\Type: ' . $json['Commodity'] . ' (Sofware#' . static::$softwareId . ')',
-                    [
-                        'file'  => __FILE__,
-                        'line'  => __LINE__,
-                    ]
-                );
+                \EDSM_Api_Logger_Alias::log('\Alias\Station\Commodity\Type: ' . $json['Commodity']);
 
                 // Save in temp table for reparsing
                 $json['isError']            = 1;
@@ -71,13 +65,7 @@ class MissionAccepted extends Event
                 static::$return['msgnum']   = 402;
                 static::$return['msg']      = 'Item unknown';
 
-                \EDSM_Api_Logger_Alias::log(
-                    '\Alias\Station\Mission\Passenger\Type: ' . $json['PassengerType'] . ' (Sofware#' . static::$softwareId . ')',
-                    [
-                        'file'  => __FILE__,
-                        'line'  => __LINE__,
-                    ]
-                );
+                \EDSM_Api_Logger_Alias::log('\Alias\Station\Mission\Passenger\Type: ' . $json['PassengerType']);
 
                 // Save in temp table for reparsing
                 $json['isError']            = 1;
@@ -96,13 +84,7 @@ class MissionAccepted extends Event
                 static::$return['msgnum']   = 402;
                 static::$return['msg']      = 'Item unknown';
 
-                \EDSM_Api_Logger_Alias::log(
-                    '\Alias\Station\Mission\Util: ' . $json['Target'] . ' (Sofware#' . static::$softwareId . ')',
-                    [
-                        'file'  => __FILE__,
-                        'line'  => __LINE__,
-                    ]
-                );
+                \EDSM_Api_Logger_Alias::log('\Alias\Station\Mission\Util: ' . $json['Target']);
 
                 // Save in temp table for reparsing
                 $json['isError']            = 1;
@@ -121,13 +103,7 @@ class MissionAccepted extends Event
                 static::$return['msgnum']   = 402;
                 static::$return['msg']      = 'Item unknown';
 
-                \EDSM_Api_Logger_Alias::log(
-                    '\Alias\Station\Mission\Util: ' . $json['TargetType'] . ' (Sofware#' . static::$softwareId . ')',
-                    [
-                        'file'  => __FILE__,
-                        'line'  => __LINE__,
-                    ]
-                );
+                \EDSM_Api_Logger_Alias::log('\Alias\Station\Mission\Util: ' . $json['TargetType']);
 
                 // Save in temp table for reparsing
                 $json['isError']            = 1;

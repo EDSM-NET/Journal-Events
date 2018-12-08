@@ -26,13 +26,7 @@ class CommitCrime extends Event
             static::$return['msgnum']   = 402;
             static::$return['msg']      = 'Item unknown';
 
-            \EDSM_Api_Logger_Alias::log(
-                'Alias\Commander\Crime\Type: ' . $json['CrimeType'] . ' (Sofware#' . static::$softwareId . ')',
-                [
-                    'file'  => __FILE__,
-                    'line'  => __LINE__,
-                ]
-            );
+            \EDSM_Api_Logger_Alias::log('Alias\Commander\Crime\Type: ' . $json['CrimeType']);
 
             // Save in temp table for reparsing
             $json['isError']            = 1;
@@ -51,26 +45,7 @@ class CommitCrime extends Event
                 static::$return['msgnum']   = 402;
                 static::$return['msg']      = 'Item unknown';
 
-                if(array_key_exists('Victim_Localised', $json))
-                {
-                    \EDSM_Api_Logger_Alias::log(
-                        'Alias\Commander\Crime\Victim: ' . $json['Victim'] . ' / ' . $json['Victim_Localised'] . ' (Sofware#' . static::$softwareId . ')',
-                        [
-                            'file'  => __FILE__,
-                            'line'  => __LINE__,
-                        ]
-                    );
-                }
-                else
-                {
-                    \EDSM_Api_Logger_Alias::log(
-                        'Alias\Commander\Crime\Victim: ' . $json['Victim'] . ' (Sofware#' . static::$softwareId . ')',
-                        [
-                            'file'  => __FILE__,
-                            'line'  => __LINE__,
-                        ]
-                    );
-                }
+                \EDSM_Api_Logger_Alias::log('Alias\Commander\Crime\Victim: ' . $json['Victim']);
 
                 // Save in temp table for reparsing
                 $json['isError']            = 1;

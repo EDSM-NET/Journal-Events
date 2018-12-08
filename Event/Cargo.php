@@ -47,13 +47,7 @@ class Cargo extends Event
                 static::$return['msgnum']   = 402;
                 static::$return['msg']      = 'Item unknown';
 
-                \EDSM_Api_Logger_Alias::log(
-                    $aliasClass . ': ' . $inventoryItem['Name'] . ' (Sofware#' . static::$softwareId . ')',
-                    [
-                        'file'  => __FILE__,
-                        'line'  => __LINE__,
-                    ]
-                );
+                \EDSM_Api_Logger_Alias::log($aliasClass . ': ' . $inventoryItem['Name']);
 
                 // Save in temp table for reparsing
                 $json['isError']            = 1;
