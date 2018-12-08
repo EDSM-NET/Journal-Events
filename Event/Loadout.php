@@ -237,10 +237,57 @@ class Loadout extends Event
                                                 $engineering['quality']         = $module['Engineering']['Quality'];
                                                 $engineering['mods']            = array();
 
-                                                // Loop modfules and remove unneeded fields ;)
+                                                // Loop modules and remove unneeded fields ;)
                                                 foreach($module['Engineering']['Modifiers'] AS $moduleModifier)
                                                 {
-                                                    unset($moduleModifier['OriginalValue'], $moduleModifier['LessIsGood']);
+                                                    //unset($moduleModifier['OriginalValue']);
+                                                    //unset($moduleModifier['LessIsGood']);
+
+                                                    // For each modifiers, check that we have a class existing, and the module original value :)
+                                                    // This will be use to remove OriginalValue from the database when we need to create it again for Coriolis...
+                                                    /**/
+                                                    if(array_key_exists('OriginalValue', $moduleModifier))
+                                                    {
+                                                        $useClass   = 'Alias\Station\Outfitting\\' . $moduleModifier['Label'];
+
+                                                        if(file_exists(LIBRARY_PATH . '/' . str_replace('\\', '/', $useClass) . '.php'))
+                                                        {
+                                                            $getOriginalValue = $useClass::get($insertModule['refOutfitting']);
+
+                                                            if(is_null($getOriginalValue))
+                                                            {
+                                                                \EDSM_Api_Logger_Alias::log(
+                                                                    'Outfitting original value missing: ' . $useClass . '::' . $insertModule['refOutfitting'] . ': ' . $moduleModifier['OriginalValue'] . ' (Sofware#' . static::$softwareId . ')',
+                                                                    [
+                                                                        'file'  => __FILE__,
+                                                                        'line'  => __LINE__,
+                                                                    ]
+                                                                );
+                                                            }
+                                                            elseif($getOriginalValue != $moduleModifier['OriginalValue'])
+                                                            {
+                                                                \EDSM_Api_Logger_Alias::log(
+                                                                    'Outfitting original value wrong: ' . $useClass . '::' . $insertModule['refOutfitting'] . ': ' . $moduleModifier['OriginalValue'] . ' (Sofware#' . static::$softwareId . ')',
+                                                                    [
+                                                                        'file'  => __FILE__,
+                                                                        'line'  => __LINE__,
+                                                                    ]
+                                                                );
+                                                            }
+                                                        }
+                                                        else
+                                                        {
+                                                            \EDSM_Api_Logger_Alias::log(
+                                                                'Outfitting class do not exists: ' . $useClass . ' (Sofware#' . static::$softwareId . ')',
+                                                                [
+                                                                    'file'  => __FILE__,
+                                                                    'line'  => __LINE__,
+                                                                ]
+                                                            );
+                                                        }
+                                                    }
+                                                    /**/
+
                                                     $engineering['mods'][] = $moduleModifier;
                                                 }
 
