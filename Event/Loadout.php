@@ -228,27 +228,50 @@ class Loadout extends Event
                                                 // Loop modules and remove unneeded fields ;)
                                                 foreach($module['Engineering']['Modifiers'] AS $moduleModifier)
                                                 {
-                                                    //unset($moduleModifier['OriginalValue']);
-                                                    //unset($moduleModifier['LessIsGood']);
-
                                                     // For each modifiers, check that we have a class existing, and the module original value :)
                                                     // This will be use to remove OriginalValue from the database when we need to create it again for Coriolis...
-                                                    /**/
                                                     if(array_key_exists('OriginalValue', $moduleModifier))
                                                     {
                                                         $useClass   = 'Alias\Station\Outfitting\\' . $moduleModifier['Label'];
 
-                                                        if(file_exists(LIBRARY_PATH . '/' . str_replace('\\', '/', $useClass) . '.php'))
+                                                        if(file_exists(LIBRARY_PATH . '/' . str_replace(['\\', '_'], ['/', '/'], $useClass) . '.php'))
                                                         {
                                                             $getOriginalValue = $useClass::get($insertModule['refOutfitting']);
 
                                                             if(is_null($getOriginalValue))
                                                             {
-                                                                \EDSM_Api_Logger_Alias::log('Outfitting original value missing: ' . $useClass . '::' . $insertModule['refOutfitting'] . ': ' . $moduleModifier['OriginalValue']);
+                                                                if($moduleModifier['Label'] == 'DamageType')
+                                                                {
+                                                                    \EDSM_Api_Logger_Alias::log('Outfitting OriginalValue missing: ' . $useClass . '::' . $insertModule['refOutfitting'] . ': ' . $moduleModifier['ValueStr']);
+                                                                }
+                                                                else
+                                                                {
+                                                                    \EDSM_Api_Logger_Alias::log('Outfitting OriginalValue missing: ' . $useClass . '::' . $insertModule['refOutfitting'] . ': ' . $moduleModifier['OriginalValue']);
+                                                                }
                                                             }
-                                                            elseif($getOriginalValue != $moduleModifier['OriginalValue'])
+                                                            else
                                                             {
-                                                                \EDSM_Api_Logger_Alias::log('Outfitting original value wrong: ' . $useClass . '::' . $insertModule['refOutfitting'] . ': ' . $moduleModifier['OriginalValue']);
+                                                                if($getOriginalValue != $moduleModifier['OriginalValue'])
+                                                                {
+                                                                    \EDSM_Api_Logger_Alias::log('Outfitting OriginalValue wrong: ' . $useClass . '::' . $insertModule['refOutfitting'] . ': ' . $moduleModifier['OriginalValue']);
+                                                                }
+                                                                else
+                                                                {
+                                                                    // We have the static value, no need to save it...
+                                                                    unset($moduleModifier['OriginalValue']);
+                                                                }
+                                                            }
+
+                                                            $getLessIsGood = (int) $useClass::getLessIsGood($insertModule['refOutfitting']);
+
+                                                            if($getLessIsGood != $moduleModifier['LessIsGood'])
+                                                            {
+                                                                \EDSM_Api_Logger_Alias::log('Outfitting LessIsGood wrong: ' . $useClass . '::' . (bool) $moduleModifier['LessIsGood']);
+                                                            }
+                                                            else
+                                                            {
+                                                                // We have the static value, no need to save it...
+                                                                unset($moduleModifier['LessIsGood']);
                                                             }
                                                         }
                                                         else
@@ -256,7 +279,6 @@ class Loadout extends Event
                                                             \EDSM_Api_Logger_Alias::log('Outfitting class do not exists: ' . $useClass);
                                                         }
                                                     }
-                                                    /**/
 
                                                     $engineering['mods'][] = $moduleModifier;
                                                 }
