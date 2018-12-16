@@ -63,6 +63,7 @@ class Event
         '$asp_scout_cockpit_name;',
         '$belugaliner_cockpit_name;',
         '$cobramkiii_cockpit_name;',
+        '$cobramkiv_cockpit_name;',
         '$cutter_cockpit_name;',
         '$diamondbackxl_cockpit_name;',
         '$dolphin_cockpit_name;',

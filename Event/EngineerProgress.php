@@ -71,6 +71,11 @@ class EngineerProgress extends Event
 
         foreach($json['Engineers'] AS $jsonEngineer)
         {
+            if(!array_key_exists('Engineer', $jsonEngineer))
+            {
+                continue;
+            }
+
             // Check if Engineer is known in EDSM
             $engineerId        = \Alias\Station\Engineer::getFromFd($jsonEngineer['Engineer']);
 

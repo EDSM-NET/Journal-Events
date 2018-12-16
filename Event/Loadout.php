@@ -230,7 +230,7 @@ class Loadout extends Event
                                                 {
                                                     // For each modifiers, check that we have a class existing, and the module original value :)
                                                     // This will be use to remove OriginalValue from the database when we need to create it again for Coriolis...
-                                                    if(array_key_exists('OriginalValue', $moduleModifier))
+                                                    if(array_key_exists('OriginalValue', $moduleModifier) || array_key_exists('ValueStr', $moduleModifier))
                                                     {
                                                         $useClass   = 'Alias\Station\Outfitting\\' . $moduleModifier['Label'];
 
@@ -240,7 +240,7 @@ class Loadout extends Event
 
                                                             if(is_null($getOriginalValue))
                                                             {
-                                                                if($moduleModifier['Label'] == 'DamageType')
+                                                                if(array_key_exists('ValueStr', $moduleModifier) && !array_key_exists('OriginalValue', $moduleModifier))
                                                                 {
                                                                     \EDSM_Api_Logger_Alias::log('Outfitting OriginalValue missing: ' . $useClass . '::' . $insertModule['refOutfitting'] . ': ' . $moduleModifier['ValueStr']);
                                                                 }
@@ -249,7 +249,7 @@ class Loadout extends Event
                                                                     \EDSM_Api_Logger_Alias::log('Outfitting OriginalValue missing: ' . $useClass . '::' . $insertModule['refOutfitting'] . ': ' . $moduleModifier['OriginalValue']);
                                                                 }
                                                             }
-                                                            else
+                                                            elseif(array_key_exists('OriginalValue', $moduleModifier))
                                                             {
                                                                 if($getOriginalValue != $moduleModifier['OriginalValue'])
                                                                 {
@@ -262,16 +262,19 @@ class Loadout extends Event
                                                                 }
                                                             }
 
-                                                            $getLessIsGood = (int) $useClass::getLessIsGood($insertModule['refOutfitting']);
+                                                            if(array_key_exists('LessIsGood', $moduleModifier))
+                                                            {
+                                                                $getLessIsGood = (int) $useClass::getLessIsGood($insertModule['refOutfitting']);
 
-                                                            if($getLessIsGood != $moduleModifier['LessIsGood'])
-                                                            {
-                                                                \EDSM_Api_Logger_Alias::log('Outfitting LessIsGood wrong: ' . $useClass . '::' . (bool) $moduleModifier['LessIsGood']);
-                                                            }
-                                                            else
-                                                            {
-                                                                // We have the static value, no need to save it...
-                                                                unset($moduleModifier['LessIsGood']);
+                                                                if($getLessIsGood != $moduleModifier['LessIsGood'])
+                                                                {
+                                                                    \EDSM_Api_Logger_Alias::log('Outfitting LessIsGood wrong: ' . $useClass . '::' . (bool) $moduleModifier['LessIsGood']);
+                                                                }
+                                                                else
+                                                                {
+                                                                    // We have the static value, no need to save it...
+                                                                    unset($moduleModifier['LessIsGood']);
+                                                                }
                                                             }
                                                         }
                                                         else

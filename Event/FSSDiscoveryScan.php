@@ -34,7 +34,6 @@ class FSSDiscoveryScan extends Event
                     $insert                 = array();
                     $insert['refSystem']    = $systemId;
                     $insert['bodyCount']    = $json['BodyCount'];
-                    $insert['nonBodyCount'] = $json['NonBodyCount'];
 
                     $systemsBodiesCountModel->insert($insert);
                 }
@@ -62,18 +61,28 @@ class FSSDiscoveryScan extends Event
             }
             else
             {
-                if($currentBodiesCount['bodyCount'] != $json['BodyCount'] || $currentBodiesCount['nonBodyCount'] != $json['NonBodyCount'])
+                if($currentBodiesCount['bodyCount'] != $json['BodyCount'])
                 {
-                    $registry = \Zend_Registry::getInstance();
-
-                    if($registry->offsetExists('sentryClient'))
+                    if($json['BodyCount'] > $currentBodiesCount['bodyCount'])
                     {
-                        $sentryClient = $registry->offsetGet('sentryClient');
-                        $sentryClient->captureMessage(
-                            'Wrong bodyCount',
-                            array('systemId' => $systemId,),
-                            array('extra' => $json,)
-                        );
+                        $update                 = array();
+                        $update['bodyCount']    = $json['BodyCount'];
+
+                        $systemsBodiesCountModel->updateByRefSystem($systemId, $update);
+                    }
+                    else
+                    {
+                        $registry = \Zend_Registry::getInstance();
+
+                        if($registry->offsetExists('sentryClient'))
+                        {
+                            $sentryClient = $registry->offsetGet('sentryClient');
+                            $sentryClient->captureMessage(
+                                'Wrong bodyCount',
+                                array('systemId' => $systemId,),
+                                array('extra' => $json,)
+                            );
+                        }
                     }
                 }
             }
