@@ -63,26 +63,21 @@ class FSSDiscoveryScan extends Event
             {
                 if($currentBodiesCount['bodyCount'] != $json['BodyCount'])
                 {
-                    if($json['BodyCount'] > $currentBodiesCount['bodyCount'])
-                    {
-                        $update                 = array();
-                        $update['bodyCount']    = $json['BodyCount'];
+                    $update                 = array();
+                    $update['bodyCount']    = $json['BodyCount'];
 
-                        $systemsBodiesCountModel->updateByRefSystem($systemId, $update);
-                    }
-                    else
-                    {
-                        $registry = \Zend_Registry::getInstance();
+                    $systemsBodiesCountModel->updateByRefSystem($systemId, $update);
 
-                        if($registry->offsetExists('sentryClient'))
-                        {
-                            $sentryClient = $registry->offsetGet('sentryClient');
-                            $sentryClient->captureMessage(
-                                'Wrong bodyCount',
-                                array('systemId' => $systemId,),
-                                array('extra' => $json,)
-                            );
-                        }
+                    $registry = \Zend_Registry::getInstance();
+
+                    if($registry->offsetExists('sentryClient'))
+                    {
+                        $sentryClient = $registry->offsetGet('sentryClient');
+                        $sentryClient->captureMessage(
+                            'Wrong bodyCount',
+                            array('systemId' => $systemId,),
+                            array('extra' => $json,)
+                        );
                     }
                 }
             }
