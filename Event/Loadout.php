@@ -197,6 +197,33 @@ class Loadout extends Event
                                                 // Try to guess it from name
                                                 if(array_key_exists('BlueprintName', $module['Engineering']))
                                                 {
+                                                    // Convert cAPI Blueprint name...
+                                                    // Done on cAPI importer too...
+                                                    $module['Engineering']['BlueprintName'] = str_replace('Sensor_Sensor_', 'Sensor_', $module['Engineering']['BlueprintName']);
+                                                    $module['Engineering']['BlueprintName'] = str_replace('LifeSupport_', 'Misc_', $module['Engineering']['BlueprintName']);
+
+                                                    $module['Engineering']['BlueprintName'] = str_replace('Sensor_SurfaceScanner_LongRange', 'Sensor_LongRange', $module['Engineering']['BlueprintName']);
+                                                    $module['Engineering']['BlueprintName'] = str_replace('Sensor_WakeScanner_LongRange', 'Sensor_LongRange', $module['Engineering']['BlueprintName']);
+                                                    $module['Engineering']['BlueprintName'] = str_replace('HeatSinkLauncher_HeatSinkCapacity', 'Misc_HeatSinkCapacity', $module['Engineering']['BlueprintName']);
+                                                    $module['Engineering']['BlueprintName'] = str_replace('ChaffLauncher_ChaffCapacity', 'Misc_ChaffCapacity', $module['Engineering']['BlueprintName']);
+
+                                                    $module['Engineering']['BlueprintName'] = str_replace('ChaffLauncher_Reinforced', 'Misc_Reinforced', $module['Engineering']['BlueprintName']);
+                                                    $module['Engineering']['BlueprintName'] = str_replace('Sensor_KillWarrantScanner_FastScan', 'Sensor_FastScan', $module['Engineering']['BlueprintName']);
+
+                                                    $module['Engineering']['BlueprintName'] = str_replace('ChaffLauncher_LightWeight', 'Misc_LightWeight', $module['Engineering']['BlueprintName']);
+                                                    $module['Engineering']['BlueprintName'] = str_replace('HeatSinkLauncher_LightWeight', 'Misc_LightWeight', $module['Engineering']['BlueprintName']);
+                                                    $module['Engineering']['BlueprintName'] = str_replace('PointDefence_LightWeight', 'Misc_LightWeight', $module['Engineering']['BlueprintName']);
+                                                    $module['Engineering']['BlueprintName'] = str_replace('WakeScanner_LightWeight', 'Misc_LightWeight', $module['Engineering']['BlueprintName']);
+                                                    $module['Engineering']['BlueprintName'] = str_replace('CollectionLimpet_LightWeight', 'Misc_LightWeight', $module['Engineering']['BlueprintName']);
+                                                    $module['Engineering']['BlueprintName'] = str_replace('FuelTransferLimpet_LightWeight', 'Misc_LightWeight', $module['Engineering']['BlueprintName']);
+                                                    $module['Engineering']['BlueprintName'] = str_replace('PointDefence_LightWeight', 'Misc_LightWeight', $module['Engineering']['BlueprintName']);
+                                                    $module['Engineering']['BlueprintName'] = str_replace('KillWarrantScanner_LightWeight', 'Misc_LightWeight', $module['Engineering']['BlueprintName']);
+                                                    $module['Engineering']['BlueprintName'] = str_replace('ProspectingLimpet_LightWeight', 'Misc_LightWeight', $module['Engineering']['BlueprintName']);
+
+                                                    $module['Engineering']['BlueprintName'] = str_replace('ChaffLauncher_Shielded', 'Misc_Shielded', $module['Engineering']['BlueprintName']);
+                                                    $module['Engineering']['BlueprintName'] = str_replace('FuelScoop_Shielded', 'Misc_Shielded', $module['Engineering']['BlueprintName']);
+                                                    $module['Engineering']['BlueprintName'] = str_replace('CollectionLimpet_Shielded', 'Misc_Shielded', $module['Engineering']['BlueprintName']);
+
                                                     $guess = array_search(
                                                         strtolower($module['Engineering']['BlueprintName']),
                                                         \Alias\Station\Engineer\Blueprint\Type::$nameLoadout
