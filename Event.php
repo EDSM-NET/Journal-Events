@@ -50,6 +50,7 @@ class Event
         '$modularcargobaydoorfdl_name;',
 
         '$decal_powerplay_aislingduval_name;',
+        '$decal_explorer_starblazer_name;',
 
         '$paintjob_testbuggy_luminous_purple_name;',
         '$paintjob_testbuggy_tactical_grey_name;',
@@ -78,6 +79,9 @@ class Event
         '$ferdelance_cockpit_name;',
         '$independant_trader_cockpit_name;',
         '$krait_mkii_cockpit_name;',
+        '$krait_light_cockpit_name;',
+        '$mamba_cockpit_name;',
+        '$orca_cockpit_name;',
         '$python_cockpit_name;',
         '$sidewinder_cockpit_name;',
         '$type6_cockpit_name;',
