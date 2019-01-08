@@ -7,12 +7,12 @@
 namespace   Journal\Event;
 use         Journal\Event;
 
-class FSSDiscoveryScan extends Event
+class FSSAllBodiesFound extends Event
 {
     protected static $isOK          = true;
     protected static $description   = [
-        'Insert body count in current system.',
-        'Update if wrong and not locked',
+        'Insert/Update body count in current system.',
+        'Lock the final body count',
     ];
 
 
@@ -32,9 +32,12 @@ class FSSDiscoveryScan extends Event
                 {
                     $insert                 = array();
                     $insert['refSystem']    = $systemId;
-                    $insert['bodyCount']    = $json['BodyCount'];
+                    $insert['bodyCount']    = $json['Count'];
+                    $insert['isLocked']     = 1;
 
                     $systemsBodiesCountModel->insert($insert);
+
+                    unset($insert);
                 }
                 catch(\Zend_Db_Exception $e)
                 {
@@ -60,13 +63,32 @@ class FSSDiscoveryScan extends Event
             }
             else
             {
-                // FSSAllBodiesFound has the real SystemAddress and will lock the body count, so only update if we haven't locked yet
-                if($currentBodiesCount['bodyCount'] != $json['BodyCount'] && array_key_exists('isLocked', $currentBodiesCount) && $currentBodiesCount['isLocked'] == 0)
+                if($currentBodiesCount['bodyCount'] != $json['Count'])
                 {
-                    $update                 = array();
-                    $update['bodyCount']    = $json['BodyCount'];
+                    if(!array_key_exists('isLocked', $currentBodiesCount) || (array_key_exists('isLocked', $currentBodiesCount) && $currentBodiesCount['isLocked'] == 0))
+                    {
+                        $update                 = array();
+                        $update['bodyCount']    = $json['Count'];
+                        $update['isLocked']     = 1;
 
-                    $systemsBodiesCountModel->updateByRefSystem($systemId, $update);
+                        $systemsBodiesCountModel->updateByRefSystem($systemId, $update);
+
+                        unset($update);
+                    }
+                    else
+                    {
+                        $registry = \Zend_Registry::getInstance();
+
+                        if($registry->offsetExists('sentryClient'))
+                        {
+                            $sentryClient = $registry->offsetGet('sentryClient');
+                            $sentryClient->captureMessage(
+                                'Wrong bodyCount',
+                                array('systemId' => $systemId,),
+                                array('extra' => $json,)
+                            );
+                        }
+                    }
                 }
             }
 
