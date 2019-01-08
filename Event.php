@@ -77,6 +77,7 @@ class Event
         '$federation_dropship_mkii_cockpit_name;',
         '$federation_gunship_cockpit_name;',
         '$ferdelance_cockpit_name;',
+        '$hauler_cockpit_name;',
         '$independant_trader_cockpit_name;',
         '$krait_mkii_cockpit_name;',
         '$krait_light_cockpit_name;',

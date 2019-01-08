@@ -13,6 +13,7 @@ class Discard
         // EDMC / EDD / EDDI
         //'StartUp', // Give first system response to EDMC
         'ShutDown',
+        'EDDItemSet',
         'EDDCommodityPrices',
         'ModuleArrived',
         'ShipArrived',

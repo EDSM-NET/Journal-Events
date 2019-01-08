@@ -79,6 +79,8 @@ class Docked extends Event
             {
                 static::$user->giveBadge(600);
             }
+
+
         }
 
         // Give badge
@@ -88,6 +90,12 @@ class Docked extends Event
         {
             static::$user->giveBadge(551);
         }
+
+        if(array_key_exists('SystemAddress', $json) && $json['SystemAddress'] == 2003342215523)
+        {
+            static::$user->giveBadge(530);
+        }
+
 
         return static::$return;
     }
