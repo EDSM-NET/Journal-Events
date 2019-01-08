@@ -150,7 +150,7 @@ class MissionCompleted extends Event
             }
         }
 
-        //TODO: Handle permits
+        //TODO: Check user permits
         if(array_key_exists('PermitsAwarded', $json))
         {
             static::$return['msgnum']   = 402;
@@ -532,19 +532,6 @@ class MissionCompleted extends Event
             unset($databaseModel, $currentItems);
         }
 
-        //TODO: Check user permits
-        if(array_key_exists('PermitsAwarded', $json))
-        {
-            static::$return['msgnum']   = 402;
-            static::$return['msg']      = 'Item unknown';
-
-            // Save in temp table for reparsing
-            $json['isError']            = 1;
-            \Journal\Event::run($json);
-
-            return static::$return;
-        }
-
         return static::$return;
     }
 
@@ -808,6 +795,103 @@ class MissionCompleted extends Event
                 }
 
                 $details['targetFaction'] = (int) $currentFactionId;
+            }
+        }
+
+        if(array_key_exists('FactionEffects', $json))
+        {
+            $factionsModel              = new \Models_Factions;
+            $details['factionEffects']  = array();
+
+            foreach($json['FactionEffects'] AS $factionEffect)
+            {
+                $tmp = array();
+
+                if(array_key_exists('Faction', $factionEffect) && !empty($factionEffect['Faction']))
+                {
+                    $allegiance = \Alias\System\Allegiance::getFromFd($factionEffect['Faction']);
+
+                    if(is_null($allegiance))
+                    {
+                        $currentFaction     = $factionsModel->getByName($factionEffect['Faction']);
+
+                        if(!is_null($currentFaction))
+                        {
+                            $tmp['factionId'] = $currentFaction['id'];
+
+                            if(array_key_exists('Effects', $factionEffect))
+                            {
+                                $tmp['effects'] = array();
+
+                                foreach($factionEffect['Effects'] AS $currentEffect)
+                                {
+                                    $tmpEffect              = array();
+
+                                    if(array_key_exists('Effect', $currentEffect))
+                                    {
+                                        $effectId               = \Alias\Station\Mission\Effect::getFromFd($currentEffect['Effect']);
+
+                                        if(!is_null($effectId))
+                                        {
+                                            $tmpEffect['effectId'] = $effectId;
+
+                                            if(array_key_exists('Trend', $currentEffect))
+                                            {
+                                                $tmpEffect['trend']  = $currentEffect['Trend'];
+                                            }
+
+                                            $tmp['effects'][]       = $tmpEffect;
+                                        }
+                                        else
+                                        {
+                                            \EDSM_Api_Logger_Alias::log('\Alias\Station\Mission\Effect: ' . $currentEffect['Effect']);
+                                        }
+                                    }
+                                }
+                            }
+
+                            if(array_key_exists('Influence', $factionEffect))
+                            {
+                                $tmp['influence'] = array();
+
+                                foreach($factionEffect['Influence'] AS $currentInfluence)
+                                {
+                                    $systemId = static::findSystemId($currentInfluence);
+
+                                    if(!is_null($systemId))
+                                    {
+                                        $tmpInfluence               = array();
+                                        $tmpInfluence['systemId']   = $systemId;
+
+                                        if(array_key_exists('Trend', $currentInfluence))
+                                        {
+                                            $tmpInfluence['trend']  = $currentInfluence['Trend'];
+                                        }
+                                        if(array_key_exists('Influence', $currentInfluence))
+                                        {
+                                            $tmpInfluence['influence']  = $currentInfluence['Influence'];
+                                        }
+
+                                        $tmp['influence'][]         = $tmpInfluence;
+                                    }
+                                }
+                            }
+
+                            if(array_key_exists('Reputation', $factionEffect))
+                            {
+                                $tmp['reputation']  = $factionEffect['Reputation'];
+                            }
+                            if(array_key_exists('ReputationTrend', $factionEffect))
+                            {
+                                $tmp['reputationTrend']  = $factionEffect['ReputationTrend'];
+                            }
+
+                            $details['factionEffects'][] = $tmp;
+                        }
+
+                        unset($currentFaction, $currentFactionId);
+                    }
+                }
             }
         }
 
