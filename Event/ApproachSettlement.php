@@ -29,6 +29,9 @@ class ApproachSettlement extends Event
 
                 if(is_null($haveCoordinates))
                 {
+                    static::$return['msgnum']   = 402;
+                    static::$return['msg']      = 'Item unknown';
+
                     // Save until further processing
                     $json['isError']            = 1;
                     \Journal\Event::run($json);
