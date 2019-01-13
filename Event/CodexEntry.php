@@ -28,6 +28,12 @@ class CodexEntry extends Event
             return static::$return;
         }
 
+        // Skip before Q4 events...
+        if(strtotime($json['timestamp']) < strtotime('2018-12-11 12:00:00'))
+        {
+            return static::$return;
+        }
+
         $region         = null;
         $category       = null;
         $subCategory    = null;

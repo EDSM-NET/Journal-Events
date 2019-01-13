@@ -288,7 +288,7 @@ class Event
         }
 
         // Some events have the StarSystem
-        if(in_array($json['event'], ['Docked', 'Location', 'Scan']) && array_key_exists('StarSystem', $json))
+        if(array_key_exists('event', $json) && in_array($json['event'], ['Docked', 'Location', 'Scan']) && array_key_exists('StarSystem', $json))
         {
             $systemName = $json['StarSystem'];
 
