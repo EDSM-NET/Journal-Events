@@ -36,6 +36,13 @@ class EngineerCraft extends Event
             return static::$return;
         }
 
+        // Convert after 3.0
+        if(array_key_exists('Blueprint', $json) && !array_key_exists('BlueprintName', $json))
+        {
+            $json['BlueprintName']  = $json['Blueprint'];
+            unset($json['Blueprint']);
+        }
+
         // Check if Blueprint is known in EDSM
         if(array_key_exists('Blueprint', $json) && array_key_exists('BlueprintID', $json))
         {
@@ -43,7 +50,7 @@ class EngineerCraft extends Event
 
             if(is_null($blueprintId))
             {
-                \EDSM_Api_Logger_Alias::log('Alias\Station\Engineer\Blueprint\Type: ' . $json['Blueprint'] . ' / ' . $json['BlueprintID']);
+                \EDSM_Api_Logger_Alias::log('Alias\Station\Engineer\Blueprint\Type: ' . $json['BlueprintName'] . ' / ' . $json['BlueprintID']);
             }
 
             // Check if availability is known to EDSM
@@ -53,11 +60,11 @@ class EngineerCraft extends Event
 
                 if(!array_key_exists($blueprintId, $availables))
                 {
-                    \EDSM_Api_Logger_Alias::log('Alias\Station\Engineer\Blueprint\Available: ' . $json['Engineer'] . ' / ' . $json['Blueprint'] . ' / ' . $json['BlueprintID']);
+                    \EDSM_Api_Logger_Alias::log('Alias\Station\Engineer\Blueprint\Available: ' . $json['Engineer'] . ' / ' . $json['BlueprintName'] . ' / ' . $json['BlueprintID']);
                 }
                 elseif(array_key_exists('Level', $json) && !in_array($json['Level'], $availables[$blueprintId]))
                 {
-                    \EDSM_Api_Logger_Alias::log('Alias\Station\Engineer\Blueprint\Available: ' . $json['Engineer'] . ' / ' . $json['Blueprint'] . ' / ' . $json['BlueprintID'] . ' / ' . $json['Level']);
+                    \EDSM_Api_Logger_Alias::log('Alias\Station\Engineer\Blueprint\Available: ' . $json['Engineer'] . ' / ' . $json['BlueprintName'] . ' / ' . $json['BlueprintID'] . ' / ' . $json['Level']);
                 }
             }
         }

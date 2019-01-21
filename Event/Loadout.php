@@ -278,7 +278,7 @@ class Loadout extends Event
                                                             }
                                                             elseif(array_key_exists('OriginalValue', $moduleModifier))
                                                             {
-                                                                if($getOriginalValue != $moduleModifier['OriginalValue'])
+                                                                if($getOriginalValue != $moduleModifier['OriginalValue'] && $insertModule['refOutfitting'] != 4011 && $useClass != 'Alias\Station\Outfitting\Mass')
                                                                 {
                                                                     \EDSM_Api_Logger_Alias::log('Outfitting OriginalValue wrong: ' . $useClass . '::' . $insertModule['refOutfitting'] . ': ' . $moduleModifier['OriginalValue']);
                                                                 }

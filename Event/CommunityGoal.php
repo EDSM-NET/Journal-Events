@@ -138,7 +138,32 @@ class CommunityGoal extends Event
                     $update['refUser']      = static::$user->getId();
                     $update['dateJoined']   = $json['timestamp'];
 
-                    $usersCommunityGoalsModel->insert($update);
+                    try
+                    {
+                        $usersCommunityGoalsModel->insert($update);
+                    }
+                    catch(\Zend_Db_Exception $e)
+                    {
+                        // Based on unique index, this ship entry was already saved.
+                        if(strpos($e->getMessage(), '1062 Duplicate') !== false)
+                        {
+                            // CONTINUE...
+                        }
+                        else
+                        {
+                            static::$return['msgnum']   = 500;
+                            static::$return['msg']      = 'Exception: ' . $e->getMessage();
+
+                            $registry = \Zend_Registry::getInstance();
+
+                            if($registry->offsetExists('sentryClient'))
+                            {
+                                $sentryClient = $registry->offsetGet('sentryClient');
+                                $sentryClient->captureException($e);
+                            }
+                        }
+                    }
+
                 }
                 elseif(!array_key_exists('dateLastUpdated', $currentUserCG) || strtotime($currentUserCG['dateLastUpdated']) < strtotime($json['timestamp']))
                 {

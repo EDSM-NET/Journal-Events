@@ -19,7 +19,7 @@ class CodexEntry extends Event
     public static function run($json)
     {
         // Skip them for now...
-        if(array_key_exists('NewTraitsDiscovered', $json) || array_key_exists('Traits', $json) || array_key_exists('VoucherAmount', $json))
+        if(array_key_exists('VoucherAmount', $json))
         {
             // Save until further processing
             $json['isError']            = 1;
@@ -38,6 +38,7 @@ class CodexEntry extends Event
         $category       = null;
         $subCategory    = null;
         $type           = null;
+        $traits         = array();
 
         if(array_key_exists('Region', $json))
         {
@@ -118,6 +119,32 @@ class CodexEntry extends Event
             }
         }
 
+        if(array_key_exists('Traits', $json))
+        {
+            foreach($json['Traits'] AS $trait)
+            {
+                $currentTrait = \Alias\Codex\Traits::getFromFd($trait);
+
+                if(is_null($currentTrait))
+                {
+                    static::$return['msgnum']   = 402;
+                    static::$return['msg']      = 'Item unknown';
+
+                    \EDSM_Api_Logger_Mission::log('Alias\Codex\Traits: ' . $trait);
+
+                    // Save in temp table for reparsing
+                    $json['isError']            = 1;
+                    \Journal\Event::run($json);
+
+                    return static::$return;
+                }
+                else
+                {
+                    $traits[] = $currentTrait;
+                }
+            }
+        }
+
         if(!is_null($region) && !is_null($category) && !is_null($subCategory) && !is_null($type))
         {
             $codexModel = new \Models_Codex;
@@ -128,8 +155,15 @@ class CodexEntry extends Event
                 $insert                     = array();
                 $insert['refRegion']        = $region;
                 $insert['refType']          = $type;
+                $insert['traits']           = null;
                 $insert['firstReportedBy']  = static::$user->getId();
                 $insert['firstReportedOn']  = $json['timestamp'];
+
+                if(count($traits) > 0)
+                {
+                    sort($traits);
+                    $insert['traits']       = \Zend_Json::encode($traits);
+                }
 
                 try
                 {
@@ -179,7 +213,74 @@ class CodexEntry extends Event
                     );
                 }
 
-                // Don't rely on SystemAddress when it's obvisouly bugged...
+                // Check for new traits!
+                if(count($traits) > 0)
+                {
+                    $newTraits  = $traits;
+                    $oldTraits  = array();
+
+                    if(array_key_exists('traits', $codexEntry) && !is_null($codexEntry['traits']))
+                    {
+                        $oldTraits = \Zend_Json::decode($codexEntry['traits']);
+                    }
+
+                    $newTraits = array_unique(array_merge($newTraits, $oldTraits));
+
+                    sort($oldTraits);
+                    sort($newTraits);
+
+                    if(count($newTraits) > 0 && $oldTraits != $newTraits)
+                    {
+                        $codexModel->updateById(
+                            $codexEntry['id'],
+                            array(
+                                'traits'    => \Zend_Json::encode($newTraits),
+                            )
+                        );
+                    }
+                }
+
+                // Add user traits!
+                if(count($traits) > 0)
+                {
+                    $codexTraitsModel = new \Models_Codex_Traits;
+
+                    foreach($traits AS $newTrait)
+                    {
+                        try
+                        {
+                            $codexTraitsModel->insert(array(
+                                'refUser'       => static::$user->getId(),
+                                'refType'       => $type,
+                                'refTrait'      => $newTrait,
+                            ));
+                        }
+                        catch(\Zend_Db_Exception $e)
+                        {
+                            // Based on unique index, this codex entry was already saved.
+                            if(strpos($e->getMessage(), '1062 Duplicate') !== false)
+                            {
+                                // All good
+                            }
+                            else
+                            {
+                                $codexEntry                 = null;
+                                static::$return['msgnum']   = 500;
+                                static::$return['msg']      = 'Exception: ' . $e->getMessage();
+
+                                $registry = \Zend_Registry::getInstance();
+
+                                if($registry->offsetExists('sentryClient'))
+                                {
+                                    $sentryClient = $registry->offsetGet('sentryClient');
+                                    $sentryClient->captureException($e);
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Don't rely on SystemAddress when it's obviously bugged...
                 if(array_key_exists('SystemAddress', $json) && $json['SystemAddress'] == 1)
                 {
                     unset($json['SystemAddress']);

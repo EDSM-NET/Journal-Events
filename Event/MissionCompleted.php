@@ -844,7 +844,19 @@ class MissionCompleted extends Event
                                         }
                                         else
                                         {
-                                            \EDSM_Api_Logger_Alias::log('\Alias\Station\Mission\Effect: ' . $currentEffect['Effect']);
+                                            if(strtotime($json['timestamp']) > strtotime('2018-12-11 12:00:00'))
+                                            {
+                                                \EDSM_Api_Logger_Alias::log('\Alias\Station\Mission\Effect: ' . $currentEffect['Effect']);
+                                            }
+
+                                            $tmpEffect['effectName'] = $currentEffect['Effect'];
+
+                                            if(array_key_exists('Trend', $currentEffect))
+                                            {
+                                                $tmpEffect['trend']  = $currentEffect['Trend'];
+                                            }
+
+                                            $tmp['effects'][]       = $tmpEffect;
                                         }
                                     }
                                 }
