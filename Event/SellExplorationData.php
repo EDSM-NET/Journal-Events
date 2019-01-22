@@ -13,9 +13,9 @@ class SellExplorationData extends Event
     protected static $description   = [
         'Add exploration data sell price to commander credits.',
     ];
-    
-    
-    
+
+
+
     public static function run($json)
     {
         if(array_key_exists('TotalEarnings', $json))
@@ -33,11 +33,11 @@ class SellExplorationData extends Event
         {
             $balance = (int) $json['BaseValue'];
         }
-        
+
         if($balance > 0)
         {
             $usersCreditsModel  = new \Models_Users_Credits;
-            
+
             $isAlreadyStored    = $usersCreditsModel->fetchRow(
                 $usersCreditsModel->select()
                                   ->where('refUser = ?', static::$user->getId())
@@ -45,7 +45,7 @@ class SellExplorationData extends Event
                                   ->where('balance = ?', $balance)
                                   ->where('dateUpdated = ?', $json['timestamp'])
             );
-            
+
             if(is_null($isAlreadyStored))
             {
                 $insert                 = array();
@@ -53,19 +53,26 @@ class SellExplorationData extends Event
                 $insert['reason']       = 'SellExplorationData';
                 $insert['balance']      = $balance;
                 $insert['dateUpdated']  = $json['timestamp'];
-                
+
+                $stationId = static::findStationId($json);
+
+                if(!is_null($stationId))
+                {
+                    $insert['refStation']   = $stationId;
+                }
+
                 // Generate details
                 $details = static::generateDetails($json);
                 if(!is_null($details)){ $insert['details'] = $details; }
-                
+
                 $usersCreditsModel->insert($insert);
-                
+
                 unset($insert);
             }
             else
             {
                 $details = static::generateDetails($json);
-                
+
                 if($isAlreadyStored->details != $details)
                 {
                     $usersCreditsModel->updateById(
@@ -75,44 +82,37 @@ class SellExplorationData extends Event
                         ]
                     );
                 }
-                
+
                 static::$return['msgnum']   = 101;
                 static::$return['msg']      = 'Message already stored';
             }
-            
+
             unset($usersCreditsModel, $isAlreadyStored);
         }
-        
+
         return static::$return;
     }
-    
+
     static private function generateDetails($json)
     {
         $details                = array();
-        
+
         $details['bonus']       = $json['Bonus'];
         $details['baseValue']   = $json['BaseValue'];
-        
+
         $currentShipId          = static::findShipId($json);
-        
+
         if(!is_null($currentShipId))
         {
             $details['shipId'] = $currentShipId;
         }
-        
-        $stationId = static::findStationId($json);
-        
-        if(!is_null($stationId))
-        {
-            $details['stationId'] = $stationId;
-        }
-            
+
         if(count($details) > 0)
         {
             ksort($details);
             return \Zend_Json::encode($details);
         }
-        
+
         return null;
     }
 }

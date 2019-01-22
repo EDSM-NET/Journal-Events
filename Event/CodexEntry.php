@@ -18,16 +18,6 @@ class CodexEntry extends Event
 
     public static function run($json)
     {
-        // Skip them for now...
-        if(array_key_exists('VoucherAmount', $json))
-        {
-            // Save until further processing
-            $json['isError']            = 1;
-            \Journal\Event::run($json);
-
-            return static::$return;
-        }
-
         // Skip before Q4 events...
         if(strtotime($json['timestamp']) < strtotime('2018-12-11 12:00:00'))
         {
@@ -104,12 +94,10 @@ class CodexEntry extends Event
             if(is_null($type))
             {
                 // Don't report for now ;)
-                /*
                 static::$return['msgnum']   = 402;
                 static::$return['msg']      = 'Item unknown';
 
                 \EDSM_Api_Logger_Mission::log('Alias\Codex\Type: ' . $json['Name']);
-                */
 
                 // Save in temp table for reparsing
                 $json['isError']            = 1;
@@ -284,6 +272,10 @@ class CodexEntry extends Event
                 if(array_key_exists('SystemAddress', $json) && $json['SystemAddress'] == 1)
                 {
                     unset($json['SystemAddress']);
+                }
+                if(array_key_exists('System', $json) && array_key_exists('_systemName', $json) && is_null($json['_systemName']))
+                {
+                    $json['_systemName'] = $json['System'];
                 }
 
                 $systemId = static::findSystemId($json);

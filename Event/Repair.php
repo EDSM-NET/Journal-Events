@@ -38,6 +38,13 @@ class Repair extends Event
                 $insert['balance']      = - (int) $json['Cost'];
                 $insert['dateUpdated']  = $json['timestamp'];
 
+                $stationId = static::findStationId($json);
+
+                if(!is_null($stationId))
+                {
+                    $insert['refStation']   = $stationId;
+                }
+
                 // Generate details
                 $details = static::generateDetails($json);
                 if(!is_null($details)){ $insert['details'] = $details; }
@@ -78,13 +85,6 @@ class Repair extends Event
         if(!is_null($currentShipId))
         {
             $details['shipId'] = $currentShipId;
-        }
-
-        $stationId = static::findStationId($json);
-
-        if(!is_null($stationId))
-        {
-            $details['stationId'] = $stationId;
         }
 
         if(in_array(strtolower($json['Item']), ['all', 'wear', 'hull', 'paint']))

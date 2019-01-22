@@ -53,6 +53,13 @@ class ShipyardBuy extends Event
             $insert['balance']      = - (int) $json['ShipPrice'];
             $insert['dateUpdated']  = $json['timestamp'];
 
+            $stationId = static::findStationId($json);
+
+            if(!is_null($stationId))
+            {
+                $insert['refStation']   = $stationId;
+            }
+
             // Generate details
             $details = static::generateDetails($json);
             if(!is_null($details)){ $insert['details'] = $details; }
@@ -114,6 +121,13 @@ class ShipyardBuy extends Event
                 $insert['reason']       = 'ShipyardSell';
                 $insert['balance']      = (int) $json['SellPrice'];
                 $insert['dateUpdated']  = $json['timestamp'];
+
+                $stationId = static::findStationId($json);
+
+                if(!is_null($stationId))
+                {
+                    $insert['refStation']   = $stationId;
+                }
 
                 // Generate details
                 $details = static::generateDetailsSell($json);
@@ -184,13 +198,6 @@ class ShipyardBuy extends Event
             $details['shipType']  = $shipType;
         }
 
-        $stationId = static::findStationId($json);
-
-        if(!is_null($stationId))
-        {
-            $details['stationId'] = $stationId;
-        }
-
         if(count($details) > 0)
         {
             ksort($details);
@@ -209,13 +216,6 @@ class ShipyardBuy extends Event
         if(!is_null($shipType))
         {
             $details['shipType']  = $shipType;
-        }
-
-        $stationId = static::findStationId($json);
-
-        if(!is_null($stationId))
-        {
-            $details['stationId'] = $stationId;
         }
 
         $details['shipId'] = $json['SellOldShip'];

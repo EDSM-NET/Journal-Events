@@ -54,6 +54,13 @@ class ShipyardSell extends Event
                 $insert['balance']      = (int) $json['ShipPrice'];
                 $insert['dateUpdated']  = $json['timestamp'];
 
+                $stationId = static::findStationId($json);
+
+                if(!is_null($stationId))
+                {
+                    $insert['refStation']   = $stationId;
+                }
+
                 // Generate details
                 $details = static::generateDetails($json);
                 if(!is_null($details)){ $insert['details'] = $details; }
@@ -129,13 +136,6 @@ class ShipyardSell extends Event
         if(!is_null($shipType))
         {
             $details['shipType']  = $shipType;
-        }
-
-        $stationId = static::findStationId($json);
-
-        if(!is_null($stationId))
-        {
-            $details['stationId'] = $stationId;
         }
 
         $details['shipId'] = $json['SellShipID'];

@@ -313,6 +313,13 @@ class MissionCompleted extends Event
                 $insert['balance']      = - (int) $json['Donation'];
                 $insert['dateUpdated']  = $json['timestamp'];
 
+                $stationId = static::findStationId($json);
+
+                if(!is_null($stationId))
+                {
+                    $insert['refStation']   = $stationId;
+                }
+
                 // Generate details
                 $details = static::generateRewardDonationDetails($json);
                 if(!is_null($details)){ $insert['details'] = $details; }
@@ -924,13 +931,6 @@ class MissionCompleted extends Event
         if(!is_null($currentShipId))
         {
             $details['shipId'] = $currentShipId;
-        }
-
-        $stationId = static::findStationId($json);
-
-        if(!is_null($stationId))
-        {
-            $details['stationId'] = $stationId;
         }
 
         $details['missionId']   = $json['MissionID'];

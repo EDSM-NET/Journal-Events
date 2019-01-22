@@ -56,6 +56,13 @@ class ModuleBuy extends Event
                 $insert['balance']      = - (int) $json['BuyPrice'];
                 $insert['dateUpdated']  = $json['timestamp'];
 
+                $stationId = static::findStationId($json);
+
+                if(!is_null($stationId))
+                {
+                    $insert['refStation']   = $stationId;
+                }
+
                 // Generate details
                 $details = static::generateDetails($json);
                 if(!is_null($details)){ $insert['details'] = $details; }
@@ -159,6 +166,13 @@ class ModuleBuy extends Event
                 $insert['balance']      = (int) $json['SellPrice'];
                 $insert['dateUpdated']  = $json['timestamp'];
 
+                $stationId = static::findStationId($json);
+
+                if(!is_null($stationId))
+                {
+                    $insert['refStation']   = $stationId;
+                }
+
                 // Generate details
                 $details = static::generateDetailsSell($json);
                 if(!is_null($details)){ $insert['details'] = $details; }
@@ -206,13 +220,6 @@ class ModuleBuy extends Event
             $details['type']  = $outfittingType;
         }
 
-        $stationId = static::findStationId($json);
-
-        if(!is_null($stationId))
-        {
-            $details['stationId'] = $stationId;
-        }
-
         if(count($details) > 0)
         {
             ksort($details);
@@ -236,13 +243,6 @@ class ModuleBuy extends Event
         if(!is_null($outfittingType))
         {
             $details['type']  = $outfittingType;
-        }
-
-        $stationId = static::findStationId($json);
-
-        if(!is_null($stationId))
-        {
-            $details['stationId'] = $stationId;
         }
 
         if(count($details) > 0)

@@ -80,6 +80,7 @@ class Discard
         'LaunchDrone',
         'AfmuRepairs',
         'CockpitBreached',
+        'ReservoirReplenished',
 
         'ApproachBody',
         'LeaveBody',

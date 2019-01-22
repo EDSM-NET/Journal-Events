@@ -53,6 +53,13 @@ class MarketSell extends Event
             $insert['balance']      = (int) $json['TotalSale'];
             $insert['dateUpdated']  = $json['timestamp'];
 
+            $stationId = static::findStationId($json);
+
+            if(!is_null($stationId))
+            {
+                $insert['refStation']   = $stationId;
+            }
+
             // Generate details
             $details = static::generateDetails($json);
             if(!is_null($details)){ $insert['details'] = $details; }
@@ -152,13 +159,6 @@ class MarketSell extends Event
         if(!is_null($commodityType))
         {
             $details['type']  = $commodityType;
-        }
-
-        $stationId = static::findStationId($json);
-
-        if(!is_null($stationId))
-        {
-            $details['stationId'] = $stationId;
         }
 
         if(count($details) > 0)

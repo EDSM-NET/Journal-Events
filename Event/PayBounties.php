@@ -13,13 +13,13 @@ class PayBounties extends Event
     protected static $description   = [
         'Remove bounties from commander credits.',
     ];
-    
-    
-    
+
+
+
     public static function run($json)
     {
         $usersCreditsModel = new \Models_Users_Credits;
-        
+
         $isAlreadyStored   = $usersCreditsModel->fetchRow(
             $usersCreditsModel->select()
                               ->where('refUser = ?', static::$user->getId())
@@ -27,7 +27,7 @@ class PayBounties extends Event
                               ->where('balance = ?', - (int) $json['Amount'])
                               ->where('dateUpdated = ?', $json['timestamp'])
         );
-        
+
         if(is_null($isAlreadyStored))
         {
             $insert                 = array();
@@ -35,19 +35,26 @@ class PayBounties extends Event
             $insert['reason']       = 'PayBounties';
             $insert['balance']      = - (int) $json['Amount'];
             $insert['dateUpdated']  = $json['timestamp'];
-            
+
+            $stationId = static::findStationId($json);
+
+            if(!is_null($stationId))
+            {
+                $insert['refStation']   = $stationId;
+            }
+
             // Generate details
             $details = static::generateDetails($json);
             if(!is_null($details)){ $insert['details'] = $details; }
-            
+
             $usersCreditsModel->insert($insert);
-            
+
             unset($insert);
         }
         else
         {
             $details = static::generateDetails($json);
-            
+
             if($isAlreadyStored->details != $details)
             {
                 $usersCreditsModel->updateById(
@@ -57,33 +64,26 @@ class PayBounties extends Event
                     ]
                 );
             }
-            
+
             static::$return['msgnum']   = 101;
             static::$return['msg']      = 'Message already stored';
         }
-        
+
         unset($usersCreditsModel, $isAlreadyStored);
-        
+
         return static::$return;
     }
-    
+
     static private function generateDetails($json)
     {
         $details        = array();
         $currentShipId  = static::findShipId($json);
-        
+
         if(!is_null($currentShipId))
         {
             $details['shipId'] = $currentShipId;
         }
-        
-        $stationId = static::findStationId($json);
-        
-        if(!is_null($stationId))
-        {
-            $details['stationId'] = $stationId;
-        }
-        
+
         // Convert single faction event to array
         if(array_key_exists('Faction', $json) && !array_key_exists('Factions', $json))
         {
@@ -97,18 +97,18 @@ class PayBounties extends Event
                 ];
             }
         }
-        
+
         if(array_key_exists('Factions', $json))
         {
             $factionsModel       = new \Models_Factions;
             $details['factions'] = array();
-            
+
             foreach($json['Factions'] AS $faction)
             {
                 if(!empty($faction['Faction']))
                 {
                     $allegiance = \Alias\System\Allegiance::getFromFd($faction['Faction']);
-                    
+
                     if(!is_null($allegiance))
                     {
                         $currentFactionId = strtolower($faction['Faction']);
@@ -116,7 +116,7 @@ class PayBounties extends Event
                     else
                     {
                         $currentFaction = $factionsModel->getByName($faction['Faction']);
-                        
+
                         if(!is_null($currentFaction))
                         {
                             $currentFactionId = (int) $currentFaction['id'];
@@ -125,8 +125,8 @@ class PayBounties extends Event
                         {
                             $currentFactionId = (int) $factionsModel->insert(['name' => $faction['Faction']]);
                         }
-                    }   
-                    
+                    }
+
                     if(!array_key_exists($currentFactionId, $details['factions']))
                     {
                         $details['factions'][$currentFactionId] = 0;
@@ -134,21 +134,21 @@ class PayBounties extends Event
                     $details['factions'][$currentFactionId] += $faction['Amount'];
                 }
             }
-            
+
             unset($factionsModel);
         }
-        
+
         if(array_key_exists('BrokerPercentage', $json))
         {
             $details['brokerPercentage'] = $json['BrokerPercentage'];
         }
-            
+
         if(count($details) > 0)
         {
             ksort($details);
             return \Zend_Json::encode($details);
         }
-        
+
         return null;
     }
 }
