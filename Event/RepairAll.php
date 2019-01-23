@@ -9,6 +9,8 @@ use         Journal\Event;
 
 class RepairAll extends Event
 {
+    use \Journal\Common\Credits;
+
     protected static $isOK          = true;
     protected static $description   = [
         'Remove repair cost from commander credits.',
@@ -18,58 +20,12 @@ class RepairAll extends Event
 
     public static function run($json)
     {
-        $usersCreditsModel = new \Models_Users_Credits;
-
-        $isAlreadyStored   = $usersCreditsModel->fetchRow(
-            $usersCreditsModel->select()
-                              ->where('refUser = ?', static::$user->getId())
-                              ->where('reason = ?', 'RepairAll')
-                              ->where('balance = ?', - (int) $json['Cost'])
-                              ->where('dateUpdated = ?', $json['timestamp'])
+        static::handleCredits(
+            'RepairAll',
+            - (int) $json['Cost'],
+            static::generateDetails($json),
+            $json
         );
-
-        if(is_null($isAlreadyStored))
-        {
-            $insert                 = array();
-            $insert['refUser']      = static::$user->getId();
-            $insert['reason']       = 'RepairAll';
-            $insert['balance']      = - (int) $json['Cost'];
-            $insert['dateUpdated']  = $json['timestamp'];
-
-            $stationId = static::findStationId($json);
-
-            if(!is_null($stationId))
-            {
-                $insert['refStation']   = $stationId;
-            }
-
-            // Generate details
-            $details = static::generateDetails($json);
-            if(!is_null($details)){ $insert['details'] = $details; }
-
-            $usersCreditsModel->insert($insert);
-
-            unset($insert);
-        }
-        else
-        {
-            $details = static::generateDetails($json);
-
-            if($isAlreadyStored->details != $details)
-            {
-                $usersCreditsModel->updateById(
-                    $isAlreadyStored->id,
-                    [
-                        'details' => $details,
-                    ]
-                );
-            }
-
-            static::$return['msgnum']   = 101;
-            static::$return['msg']      = 'Message already stored';
-        }
-
-        unset($usersCreditsModel, $isAlreadyStored);
 
         return static::$return;
     }
@@ -77,12 +33,6 @@ class RepairAll extends Event
     static private function generateDetails($json)
     {
         $details        = array();
-        $currentShipId  = static::findShipId($json);
-
-        if(!is_null($currentShipId))
-        {
-            $details['shipId'] = $currentShipId;
-        }
 
         if(count($details) > 0)
         {

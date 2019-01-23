@@ -9,6 +9,8 @@ use         Journal\Event;
 
 class MissionCompleted extends Event
 {
+    use \Journal\Common\Credits;
+
     protected static $isOK          = true;
     protected static $description   = [
         'Set mission status to "Completed".',
@@ -247,106 +249,27 @@ class MissionCompleted extends Event
 
         unset($usersMissionsModel, $update);
 
-        $usersCreditsModel = new \Models_Users_Credits;
-
         // Give reward to the commander
         if(array_key_exists('Reward', $json)/* && $json['Reward'] > 0 */) // Also register 0 reward for API
         {
-            $isAlreadyStored   = $usersCreditsModel->fetchRow(
-                $usersCreditsModel->select()
-                                  ->where('refUser = ?', static::$user->getId())
-                                  ->where('reason = ?', 'MissionCompleted')
-                                  ->where('balance = ?', (int) $json['Reward'])
-                                  ->where('dateUpdated = ?', $json['timestamp'])
+            static::handleCredits(
+                'MissionCompleted',
+                (int) $json['Reward'],
+                static::generateRewardDonationDetails($json),
+                $json
             );
-
-            if(is_null($isAlreadyStored))
-            {
-                $insert                 = array();
-                $insert['refUser']      = static::$user->getId();
-                $insert['reason']       = 'MissionCompleted';
-                $insert['balance']      = (int) $json['Reward'];
-                $insert['dateUpdated']  = $json['timestamp'];
-
-                // Generate details
-                $details = static::generateRewardDonationDetails($json);
-                if(!is_null($details)){ $insert['details'] = $details; }
-
-                $usersCreditsModel->insert($insert);
-
-                unset($insert);
-            }
-            else
-            {
-                $details = static::generateRewardDonationDetails($json);
-
-                if($isAlreadyStored->details != $details)
-                {
-                    $usersCreditsModel->updateById(
-                        $isAlreadyStored->id,
-                        [
-                            'details' => $details,
-                        ]
-                    );
-                }
-            }
-
-            unset($isAlreadyStored);
         }
 
         // Remove donation from commander
         if(array_key_exists('Donation', $json)/* && $json['Donation'] > 0 */) // Also register 0 reward for API
         {
-            $isAlreadyStored   = $usersCreditsModel->fetchRow(
-                $usersCreditsModel->select()
-                                  ->where('refUser = ?', static::$user->getId())
-                                  ->where('reason = ?', 'MissionCompleted')
-                                  ->where('balance = ?', - (int) $json['Donation'])
-                                  ->where('dateUpdated = ?', $json['timestamp'])
+            static::handleCredits(
+                'MissionCompleted',
+                - (int) $json['Donation'],
+                static::generateRewardDonationDetails($json),
+                $json
             );
-
-            if(is_null($isAlreadyStored))
-            {
-                $insert                 = array();
-                $insert['refUser']      = static::$user->getId();
-                $insert['reason']       = 'MissionCompleted';
-                $insert['balance']      = - (int) $json['Donation'];
-                $insert['dateUpdated']  = $json['timestamp'];
-
-                $stationId = static::findStationId($json);
-
-                if(!is_null($stationId))
-                {
-                    $insert['refStation']   = $stationId;
-                }
-
-                // Generate details
-                $details = static::generateRewardDonationDetails($json);
-                if(!is_null($details)){ $insert['details'] = $details; }
-
-                $usersCreditsModel->insert($insert);
-
-                unset($insert);
-            }
-            else
-            {
-                $details = static::generateRewardDonationDetails($json);
-
-                if($isAlreadyStored->details != $details)
-                {
-                    $usersCreditsModel->updateById(
-                        $isAlreadyStored->id,
-                        [
-                            'details' => $details,
-                        ]
-                    );
-                }
-            }
-
-            unset($isAlreadyStored);
         }
-
-        unset($usersCreditsModel);
 
         // Attribute commodity reward to cargo hold
         if(array_key_exists('CommodityReward', $json))
@@ -841,30 +764,19 @@ class MissionCompleted extends Event
                                         if(!is_null($effectId))
                                         {
                                             $tmpEffect['effectId'] = $effectId;
-
-                                            if(array_key_exists('Trend', $currentEffect))
-                                            {
-                                                $tmpEffect['trend']  = $currentEffect['Trend'];
-                                            }
-
-                                            $tmp['effects'][]       = $tmpEffect;
                                         }
                                         else
                                         {
-                                            if(strtotime($json['timestamp']) > strtotime('2018-12-11 12:00:00'))
-                                            {
-                                                \EDSM_Api_Logger_Alias::log('\Alias\Station\Mission\Effect: ' . $currentEffect['Effect']);
-                                            }
-
                                             $tmpEffect['effectName'] = $currentEffect['Effect'];
-
-                                            if(array_key_exists('Trend', $currentEffect))
-                                            {
-                                                $tmpEffect['trend']  = $currentEffect['Trend'];
-                                            }
-
-                                            $tmp['effects'][]       = $tmpEffect;
+                                            \EDSM_Api_Logger_Alias::log('\Alias\Station\Mission\Effect: ' . $currentEffect['Effect']);
                                         }
+
+                                        if(array_key_exists('Trend', $currentEffect))
+                                        {
+                                            $tmpEffect['trend']  = $currentEffect['Trend'];
+                                        }
+
+                                        $tmp['effects'][]       = $tmpEffect;
                                     }
                                 }
                             }
@@ -925,16 +837,8 @@ class MissionCompleted extends Event
 
     static private function generateRewardDonationDetails($json)
     {
-        $details        = array();
-        $currentShipId  = static::findShipId($json);
-
-        if(!is_null($currentShipId))
-        {
-            $details['shipId'] = $currentShipId;
-        }
-
+        $details                = array();
         $details['missionId']   = $json['MissionID'];
-        $details['missionType'] = \Alias\Station\Mission\Type::getFromFd($json['Name']);
 
         if(count($details) > 0)
         {

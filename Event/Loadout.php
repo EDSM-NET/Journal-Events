@@ -203,12 +203,17 @@ class Loadout extends Event
                                                     $module['Engineering']['BlueprintName'] = str_replace('LifeSupport_', 'Misc_', $module['Engineering']['BlueprintName']);
 
                                                     $module['Engineering']['BlueprintName'] = str_replace('Sensor_SurfaceScanner_LongRange', 'Sensor_LongRange', $module['Engineering']['BlueprintName']);
+                                                    $module['Engineering']['BlueprintName'] = str_replace('Sensor_KillWarrantScanner_LongRange', 'Sensor_LongRange', $module['Engineering']['BlueprintName']);
                                                     $module['Engineering']['BlueprintName'] = str_replace('Sensor_WakeScanner_LongRange', 'Sensor_LongRange', $module['Engineering']['BlueprintName']);
                                                     $module['Engineering']['BlueprintName'] = str_replace('HeatSinkLauncher_HeatSinkCapacity', 'Misc_HeatSinkCapacity', $module['Engineering']['BlueprintName']);
                                                     $module['Engineering']['BlueprintName'] = str_replace('ChaffLauncher_ChaffCapacity', 'Misc_ChaffCapacity', $module['Engineering']['BlueprintName']);
 
                                                     $module['Engineering']['BlueprintName'] = str_replace('ChaffLauncher_Reinforced', 'Misc_Reinforced', $module['Engineering']['BlueprintName']);
+                                                    $module['Engineering']['BlueprintName'] = str_replace('PointDefence_Reinforced', 'Misc_Reinforced', $module['Engineering']['BlueprintName']);
+                                                    $module['Engineering']['BlueprintName'] = str_replace('HeatSinkLauncher_Reinforced', 'Misc_Reinforced', $module['Engineering']['BlueprintName']);
+
                                                     $module['Engineering']['BlueprintName'] = str_replace('Sensor_KillWarrantScanner_FastScan', 'Sensor_FastScan', $module['Engineering']['BlueprintName']);
+                                                    $module['Engineering']['BlueprintName'] = str_replace('Sensor_SurfaceScanner_FastScan', 'Sensor_FastScan', $module['Engineering']['BlueprintName']);
 
                                                     $module['Engineering']['BlueprintName'] = str_replace('ChaffLauncher_LightWeight', 'Misc_LightWeight', $module['Engineering']['BlueprintName']);
                                                     $module['Engineering']['BlueprintName'] = str_replace('HeatSinkLauncher_LightWeight', 'Misc_LightWeight', $module['Engineering']['BlueprintName']);
@@ -221,6 +226,8 @@ class Loadout extends Event
                                                     $module['Engineering']['BlueprintName'] = str_replace('ProspectingLimpet_LightWeight', 'Misc_LightWeight', $module['Engineering']['BlueprintName']);
 
                                                     $module['Engineering']['BlueprintName'] = str_replace('ChaffLauncher_Shielded', 'Misc_Shielded', $module['Engineering']['BlueprintName']);
+                                                    $module['Engineering']['BlueprintName'] = str_replace('AMF_Shielded', 'Misc_Shielded', $module['Engineering']['BlueprintName']);
+                                                    $module['Engineering']['BlueprintName'] = str_replace('PointDefence_Shielded', 'Misc_Shielded', $module['Engineering']['BlueprintName']);
                                                     $module['Engineering']['BlueprintName'] = str_replace('FuelScoop_Shielded', 'Misc_Shielded', $module['Engineering']['BlueprintName']);
                                                     $module['Engineering']['BlueprintName'] = str_replace('CollectionLimpet_Shielded', 'Misc_Shielded', $module['Engineering']['BlueprintName']);
 

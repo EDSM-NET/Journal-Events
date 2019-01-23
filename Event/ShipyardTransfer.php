@@ -9,6 +9,8 @@ use         Journal\Event;
 
 class ShipyardTransfer extends Event
 {
+    use \Journal\Common\Credits;
+
     protected static $isOK          = true;
     protected static $description   = [
         'Remove ship trasnfer cost from commander credits.',
@@ -21,58 +23,13 @@ class ShipyardTransfer extends Event
     {
         if($json['TransferPrice'] > 0)
         {
-            $usersCreditsModel = new \Models_Users_Credits;
-
-            $isAlreadyStored   = $usersCreditsModel->fetchRow(
-                $usersCreditsModel->select()
-                                  ->where('refUser = ?', static::$user->getId())
-                                  ->where('reason = ?', 'ShipyardTransfer')
-                                  ->where('balance = ?', - (int) $json['TransferPrice'])
-                                  ->where('dateUpdated = ?', $json['timestamp'])
+            static::handleCredits(
+                'ShipyardTransfer',
+                - (int) $json['TransferPrice'],
+                null,
+                $json,
+                ( (array_key_exists('ShipID', $json)) ? $json['ShipID'] : null )
             );
-
-            if(is_null($isAlreadyStored))
-            {
-                $insert                 = array();
-                $insert['refUser']      = static::$user->getId();
-                $insert['reason']       = 'ShipyardTransfer';
-                $insert['balance']      = - (int) $json['TransferPrice'];
-                $insert['dateUpdated']  = $json['timestamp'];
-
-                $stationId = static::findStationId($json);
-
-                if(!is_null($stationId))
-                {
-                    $insert['refStation']   = $stationId;
-                }
-
-                // Generate details
-                $details = static::generateDetails($json);
-                if(!is_null($details)){ $insert['details'] = $details; }
-
-                $usersCreditsModel->insert($insert);
-
-                unset($insert);
-            }
-            else
-            {
-                $details = static::generateDetails($json);
-
-                if($isAlreadyStored->details != $details)
-                {
-                    $usersCreditsModel->updateById(
-                        $isAlreadyStored->id,
-                        [
-                            'details' => $details,
-                        ]
-                    );
-                }
-
-                static::$return['msgnum']   = 101;
-                static::$return['msg']      = 'Message already stored';
-            }
-
-            unset($usersCreditsModel, $isAlreadyStored);
         }
 
         // Update ship parking
@@ -116,19 +73,5 @@ class ShipyardTransfer extends Event
         unset($usersShipsModel);
 
         return static::$return;
-    }
-
-    static private function generateDetails($json)
-    {
-        $details            = array();
-        $details['shipId']  = $json['ShipID'];
-
-        if(count($details) > 0)
-        {
-            ksort($details);
-            return \Zend_Json::encode($details);
-        }
-
-        return null;
     }
 }

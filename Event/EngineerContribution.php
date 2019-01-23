@@ -9,6 +9,8 @@ use         Journal\Event;
 
 class EngineerContribution extends Event
 {
+    use \Journal\Common\Credits;
+
     protected static $isOK          = true;
     protected static $description   = [
         'Remove donation from the commander credits.',
@@ -94,30 +96,12 @@ class EngineerContribution extends Event
             }
             elseif($json['Type'] == 'Credits')
             {
-                $usersCreditsModel = new \Models_Users_Credits;
-
-                $isAlreadyStored   = $usersCreditsModel->fetchRow(
-                    $usersCreditsModel->select()
-                                      ->where('refUser = ?', static::$user->getId())
-                                      ->where('reason = ?', 'EngineerContribution')
-                                      ->where('balance = ?', - (int) $json['Quantity'])
-                                      ->where('dateUpdated = ?', $json['timestamp'])
+                static::handleCredits(
+                    'EngineerContribution',
+                    - (int) $json['Quantity'],
+                    null,
+                    $json
                 );
-
-                if(is_null($isAlreadyStored))
-                {
-                    $insert                 = array();
-                    $insert['refUser']      = static::$user->getId();
-                    $insert['reason']       = 'EngineerContribution';
-                    $insert['balance']      = - (int) $json['Quantity'];
-                    $insert['dateUpdated']  = $json['timestamp'];
-
-                    $usersCreditsModel->insert($insert);
-
-                    unset($insert);
-                }
-
-                unset($usersCreditsModel, $isAlreadyStored);
             }
             elseif($json['Type'] == 'Materials')
             {

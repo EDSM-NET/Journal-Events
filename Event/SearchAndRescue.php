@@ -9,6 +9,8 @@ use         Journal\Event;
 
 class SearchAndRescue extends Event
 {
+    use \Journal\Common\Credits;
+
     protected static $isOK          = true;
     protected static $description   = [
         'Add reward to commander credits.',
@@ -35,39 +37,15 @@ class SearchAndRescue extends Event
             return static::$return;
         }
 
-        $usersCreditsModel = new \Models_Users_Credits;
-
-        $isAlreadyStored   = $usersCreditsModel->fetchRow(
-            $usersCreditsModel->select()
-                              ->where('refUser = ?', static::$user->getId())
-                              ->where('reason = ?', 'SearchAndRescue')
-                              ->where('balance = ?', (int) $json['Reward'])
-                              ->where('dateUpdated = ?', $json['timestamp'])
+        $isNewEntry = static::handleCredits(
+            'SearchAndRescue',
+            (int) $json['Reward'],
+            static::generateDetails($json),
+            $json
         );
 
-        if(is_null($isAlreadyStored))
+        if($isNewEntry === true)
         {
-            $insert                 = array();
-            $insert['refUser']      = static::$user->getId();
-            $insert['reason']       = 'SearchAndRescue';
-            $insert['balance']      = (int) $json['Reward'];
-            $insert['dateUpdated']  = $json['timestamp'];
-
-            $stationId = static::findStationId($json);
-
-            if(!is_null($stationId))
-            {
-                $insert['refStation']   = $stationId;
-            }
-
-            // Generate details
-            $details = static::generateDetails($json);
-            if(!is_null($details)){ $insert['details'] = $details; }
-
-            $usersCreditsModel->insert($insert);
-
-            unset($insert);
-
             // UPDATE CARGO HOLD
             $databaseModel  = new \Models_Users_Cargo;
 
@@ -104,25 +82,6 @@ class SearchAndRescue extends Event
 
             unset($databaseModel, $currentItems);
         }
-        else
-        {
-            $details = static::generateDetails($json);
-
-            if($isAlreadyStored->details != $details)
-            {
-                $usersCreditsModel->updateById(
-                    $isAlreadyStored->id,
-                    [
-                        'details' => $details,
-                    ]
-                );
-            }
-
-            static::$return['msgnum']   = 101;
-            static::$return['msg']      = 'Message already stored';
-        }
-
-        unset($usersCreditsModel, $isAlreadyStored);
 
         return static::$return;
     }
@@ -131,12 +90,6 @@ class SearchAndRescue extends Event
     {
         $details        = array();
         $details['qty'] = $json['Count'];
-        $currentShipId  = static::findShipId($json);
-
-        if(!is_null($currentShipId))
-        {
-            $details['shipId'] = $currentShipId;
-        }
 
         $commodityType = \Alias\Station\Commodity\Type::getFromFd($json['Name']);
 

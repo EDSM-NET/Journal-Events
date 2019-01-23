@@ -9,6 +9,8 @@ use         Journal\Event;
 
 class ModuleBuy extends Event
 {
+    use \Journal\Common\Credits;
+
     protected static $isOK          = true;
     protected static $description   = [
         'Remove module cost from commander credits.',
@@ -38,58 +40,13 @@ class ModuleBuy extends Event
                 return static::$return;
             }
 
-            $usersCreditsModel = new \Models_Users_Credits;
-
-            $isAlreadyStored   = $usersCreditsModel->fetchRow(
-                $usersCreditsModel->select()
-                                  ->where('refUser = ?', static::$user->getId())
-                                  ->where('reason = ?', 'ModuleBuy')
-                                  ->where('balance = ?', - (int) $json['BuyPrice'])
-                                  ->where('dateUpdated = ?', $json['timestamp'])
+            static::handleCredits(
+                'ModuleBuy',
+                - (int) $json['BuyPrice'],
+                static::generateDetails($json),
+                $json,
+                ( (array_key_exists('ShipID', $json)) ? $json['ShipID'] : null )
             );
-
-            if(is_null($isAlreadyStored))
-            {
-                $insert                 = array();
-                $insert['refUser']      = static::$user->getId();
-                $insert['reason']       = 'ModuleBuy';
-                $insert['balance']      = - (int) $json['BuyPrice'];
-                $insert['dateUpdated']  = $json['timestamp'];
-
-                $stationId = static::findStationId($json);
-
-                if(!is_null($stationId))
-                {
-                    $insert['refStation']   = $stationId;
-                }
-
-                // Generate details
-                $details = static::generateDetails($json);
-                if(!is_null($details)){ $insert['details'] = $details; }
-
-                $usersCreditsModel->insert($insert);
-
-                unset($insert);
-            }
-            else
-            {
-                $details = static::generateDetails($json);
-
-                if($isAlreadyStored->details != $details)
-                {
-                    $usersCreditsModel->updateById(
-                        $isAlreadyStored->id,
-                        [
-                            'details' => $details,
-                        ]
-                    );
-                }
-
-                static::$return['msgnum']   = 101;
-                static::$return['msg']      = 'Message already stored';
-            }
-
-            unset($isAlreadyStored);
         }
         else
         {
@@ -148,58 +105,14 @@ class ModuleBuy extends Event
                 return static::$return;
             }
 
-            $usersCreditsModel = new \Models_Users_Credits;
-
-            $isAlreadyStored   = $usersCreditsModel->fetchRow(
-                $usersCreditsModel->select()
-                                  ->where('refUser = ?', static::$user->getId())
-                                  ->where('reason = ?', 'ModuleSell')
-                                  ->where('balance = ?', (int) $json['SellPrice'])
-                                  ->where('dateUpdated = ?', $json['timestamp'])
+            static::handleCredits(
+                'ModuleSell',
+                (int) $json['SellPrice'],
+                static::generateDetailsSell($json),
+                $json,
+                ( (array_key_exists('ShipID', $json)) ? $json['ShipID'] : null )
             );
-
-            if(is_null($isAlreadyStored))
-            {
-                $insert                 = array();
-                $insert['refUser']      = static::$user->getId();
-                $insert['reason']       = 'ModuleSell';
-                $insert['balance']      = (int) $json['SellPrice'];
-                $insert['dateUpdated']  = $json['timestamp'];
-
-                $stationId = static::findStationId($json);
-
-                if(!is_null($stationId))
-                {
-                    $insert['refStation']   = $stationId;
-                }
-
-                // Generate details
-                $details = static::generateDetailsSell($json);
-                if(!is_null($details)){ $insert['details'] = $details; }
-
-                $usersCreditsModel->insert($insert);
-
-                unset($insert);
-            }
-            else
-            {
-                $details = static::generateDetailsSell($json);
-
-                if($isAlreadyStored->details != $details)
-                {
-                    $usersCreditsModel->updateById(
-                        $isAlreadyStored->id,
-                        [
-                            'details' => $details,
-                        ]
-                    );
-                }
-            }
-
-            unset($isAlreadyStored);
         }
-
-        unset($usersCreditsModel);
 
         return static::$return;
     }
@@ -207,11 +120,6 @@ class ModuleBuy extends Event
     static private function generateDetails($json)
     {
         $details = array();
-
-        if(array_key_exists('ShipID', $json))
-        {
-            $details['shipId'] = $json['ShipID'];
-        }
 
         $outfittingType = \Alias\Station\Outfitting\Type::getFromFd($json['BuyItem']);
 
@@ -232,11 +140,6 @@ class ModuleBuy extends Event
     static private function generateDetailsSell($json)
     {
         $details = array();
-
-        if(array_key_exists('ShipID', $json))
-        {
-            $details['shipId'] = $json['ShipID'];
-        }
 
         $outfittingType = \Alias\Station\Outfitting\Type::getFromFd($json['SellItem']);
 

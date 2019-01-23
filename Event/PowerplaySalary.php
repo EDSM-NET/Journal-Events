@@ -9,6 +9,8 @@ use         Journal\Event;
 
 class PowerplaySalary extends Event
 {
+    use \Journal\Common\Credits;
+
     protected static $isOK          = true;
     protected static $description   = [
         'Add the power salary to the commander credits.',
@@ -36,58 +38,12 @@ class PowerplaySalary extends Event
             return static::$return;
         }
 
-        $usersCreditsModel = new \Models_Users_Credits;
-
-        $isAlreadyStored   = $usersCreditsModel->fetchRow(
-            $usersCreditsModel->select()
-                              ->where('refUser = ?', static::$user->getId())
-                              ->where('reason = ?', 'PowerplaySalary')
-                              ->where('balance = ?', (int) $json['Amount'])
-                              ->where('dateUpdated = ?', $json['timestamp'])
+        static::handleCredits(
+            'PowerplaySalary',
+            (int) $json['Amount'],
+            static::generateDetails($json),
+            $json
         );
-
-        if(is_null($isAlreadyStored))
-        {
-            $insert                 = array();
-            $insert['refUser']      = static::$user->getId();
-            $insert['reason']       = 'PowerplaySalary';
-            $insert['balance']      = (int) $json['Amount'];
-            $insert['dateUpdated']  = $json['timestamp'];
-
-            $stationId = static::findStationId($json);
-
-            if(!is_null($stationId))
-            {
-                $insert['refStation']   = $stationId;
-            }
-
-            // Generate details
-            $details = static::generateDetails($json);
-            if(!is_null($details)){ $insert['details'] = $details; }
-
-            $usersCreditsModel->insert($insert);
-
-            unset($insert);
-        }
-        else
-        {
-            $details = static::generateDetails($json);
-
-            if($isAlreadyStored->details != $details)
-            {
-                $usersCreditsModel->updateById(
-                    $isAlreadyStored->id,
-                    [
-                        'details' => $details,
-                    ]
-                );
-            }
-
-            static::$return['msgnum']   = 101;
-            static::$return['msg']      = 'Message already stored';
-        }
-
-        unset($usersCreditsModel, $isAlreadyStored);
 
         // Check user pledge
         $currentPowerId     = static::$user->getPower();
@@ -116,12 +72,6 @@ class PowerplaySalary extends Event
     static private function generateDetails($json)
     {
         $details        = array();
-        $currentShipId  = static::findShipId($json);
-
-        if(!is_null($currentShipId))
-        {
-            $details['shipId'] = $currentShipId;
-        }
 
         $details['power'] = \Alias\System\Power::getFromFd($json['Power']);
 

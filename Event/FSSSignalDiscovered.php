@@ -45,6 +45,7 @@ class FSSSignalDiscovered extends Event
         $volatileEvents = array(
             '$MULTIPLAYER_SCENARIO42_TITLE;',   // Nav Beacon
 
+            '$MULTIPLAYER_SCENARIO14_TITLE;',   // Resource Extraction Site
             '$MULTIPLAYER_SCENARIO77_TITLE;',   // Resource Extraction Site [Low]
             '$MULTIPLAYER_SCENARIO78_TITLE;',   // Resource Extraction Site [High]
             '$MULTIPLAYER_SCENARIO79_TITLE;',   // Resource Extraction Site [Hazardous]

@@ -9,6 +9,8 @@ use         Journal\Event;
 
 class ShipyardBuy extends Event
 {
+    use \Journal\Common\Credits;
+
     protected static $isOK          = true;
     protected static $description   = [
         'Remove ship cost from commander credits.',
@@ -35,58 +37,12 @@ class ShipyardBuy extends Event
             return static::$return;
         }
 
-        $usersCreditsModel = new \Models_Users_Credits;
-
-        $isAlreadyStored   = $usersCreditsModel->fetchRow(
-            $usersCreditsModel->select()
-                              ->where('refUser = ?', static::$user->getId())
-                              ->where('reason = ?', 'ShipyardBuy')
-                              ->where('balance = ?', - (int) $json['ShipPrice'])
-                              ->where('dateUpdated = ?', $json['timestamp'])
+        static::handleCredits(
+            'ShipyardBuy',
+            - (int) $json['ShipPrice'],
+            static::generateDetails($json),
+            $json
         );
-
-        if(is_null($isAlreadyStored))
-        {
-            $insert                 = array();
-            $insert['refUser']      = static::$user->getId();
-            $insert['reason']       = 'ShipyardBuy';
-            $insert['balance']      = - (int) $json['ShipPrice'];
-            $insert['dateUpdated']  = $json['timestamp'];
-
-            $stationId = static::findStationId($json);
-
-            if(!is_null($stationId))
-            {
-                $insert['refStation']   = $stationId;
-            }
-
-            // Generate details
-            $details = static::generateDetails($json);
-            if(!is_null($details)){ $insert['details'] = $details; }
-
-            $usersCreditsModel->insert($insert);
-
-            unset($insert);
-        }
-        else
-        {
-            $details = static::generateDetails($json);
-
-            if($isAlreadyStored->details != $details)
-            {
-                $usersCreditsModel->updateById(
-                    $isAlreadyStored->id,
-                    [
-                        'details' => $details,
-                    ]
-                );
-            }
-
-            static::$return['msgnum']   = 101;
-            static::$return['msg']      = 'Message already stored';
-        }
-
-        unset($isAlreadyStored);
 
         // Old ship sold?
         if(array_key_exists('SellPrice', $json) && $json['SellPrice'] > 0)
@@ -106,46 +62,13 @@ class ShipyardBuy extends Event
                 return static::$return;
             }
 
-            $isAlreadyStored   = $usersCreditsModel->fetchRow(
-                $usersCreditsModel->select()
-                                  ->where('refUser = ?', static::$user->getId())
-                                  ->where('reason = ?', 'ShipyardSell')
-                                  ->where('balance = ?', (int) $json['SellPrice'])
-                                  ->where('dateUpdated = ?', $json['timestamp'])
+            static::handleCredits(
+                'ShipyardSell',
+                (int) $json['SellPrice'],
+                static::generateDetailsSell($json),
+                $json,
+                ( (array_key_exists('SellOldShip', $json)) ? $json['SellOldShip'] : null )
             );
-
-            if(is_null($isAlreadyStored))
-            {
-                $insert                 = array();
-                $insert['refUser']      = static::$user->getId();
-                $insert['reason']       = 'ShipyardSell';
-                $insert['balance']      = (int) $json['SellPrice'];
-                $insert['dateUpdated']  = $json['timestamp'];
-
-                $stationId = static::findStationId($json);
-
-                if(!is_null($stationId))
-                {
-                    $insert['refStation']   = $stationId;
-                }
-
-                // Generate details
-                $details = static::generateDetailsSell($json);
-                if(!is_null($details)){ $insert['details'] = $details; }
-
-                $usersCreditsModel->insert($insert);
-
-                unset($insert);
-            }
-            else
-            {
-                $details = static::generateDetailsSell($json);
-
-                if($isAlreadyStored->details != $details)
-                {
-                    $usersCreditsModel->updateById($isAlreadyStored->id, array('details' => $details));
-                }
-            }
 
             // Sell ship
             $usersShipsModel    = new \Models_Users_Ships;
@@ -217,8 +140,6 @@ class ShipyardBuy extends Event
         {
             $details['shipType']  = $shipType;
         }
-
-        $details['shipId'] = $json['SellOldShip'];
 
         if(count($details) > 0)
         {

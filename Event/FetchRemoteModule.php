@@ -9,6 +9,8 @@ use         Journal\Event;
 
 class FetchRemoteModule extends Event
 {
+    use \Journal\Common\Credits;
+
     protected static $isOK          = true;
     protected static $description   = [
         'Remove module transfer price from the commander credits.',
@@ -41,58 +43,13 @@ class FetchRemoteModule extends Event
 
         if($json['TransferCost'] > 0)
         {
-            $usersCreditsModel = new \Models_Users_Credits;
-
-            $isAlreadyStored   = $usersCreditsModel->fetchRow(
-                $usersCreditsModel->select()
-                                  ->where('refUser = ?', static::$user->getId())
-                                  ->where('reason = ?', 'FetchRemoteModule')
-                                  ->where('balance = ?', (int) $json['TransferCost'])
-                                  ->where('dateUpdated = ?', $json['timestamp'])
+            static::handleCredits(
+                'FetchRemoteModule',
+                - (int) $json['TransferCost'],
+                static::generateDetails($json),
+                $json,
+                ( (array_key_exists('ShipID', $json)) ? $json['ShipID'] : null )
             );
-
-            if(is_null($isAlreadyStored))
-            {
-                $insert                 = array();
-                $insert['refUser']      = static::$user->getId();
-                $insert['reason']       = 'FetchRemoteModule';
-                $insert['balance']      = (int) $json['TransferCost'];
-                $insert['dateUpdated']  = $json['timestamp'];
-
-                $stationId = static::findStationId($json);
-
-                if(!is_null($stationId))
-                {
-                    $insert['refStation']   = $stationId;
-                }
-
-                // Generate details
-                $details = static::generateDetails($json);
-                if(!is_null($details)){ $insert['details'] = $details; }
-
-                $usersCreditsModel->insert($insert);
-
-                unset($insert);
-            }
-            else
-            {
-                $details = static::generateDetails($json);
-
-                if($isAlreadyStored->details != $details)
-                {
-                    $usersCreditsModel->updateById(
-                        $isAlreadyStored->id,
-                        [
-                            'details' => $details,
-                        ]
-                    );
-                }
-
-                static::$return['msgnum']   = 101;
-                static::$return['msg']      = 'Message already stored';
-            }
-
-            unset($usersCreditsModel, $isAlreadyStored);
         }
 
         return static::$return;
@@ -101,11 +58,6 @@ class FetchRemoteModule extends Event
     static private function generateDetails($json)
     {
         $details = array();
-
-        if(array_key_exists('ShipID', $json))
-        {
-            $details['shipId'] = $json['ShipID'];
-        }
 
         $outfittingType = \Alias\Station\Outfitting\Type::getFromFd($json['StoredItem']);
 

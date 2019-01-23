@@ -9,10 +9,12 @@ use         Journal\Event;
 
 class BuyExplorationData extends Event
 {
+    use \Journal\Common\Credits;
+
     protected static $isOK          = true;
-    protected static $description   = '<ul>
-                                           <li>Remove exploration data buy price from commander credits.</li>
-                                       </ul>';
+    protected static $description   = [
+        'Remove exploration data buy price from commander credits.'
+    ];
 
 
 
@@ -20,58 +22,12 @@ class BuyExplorationData extends Event
     {
         if($json['Cost'] > 0)
         {
-            $usersCreditsModel = new \Models_Users_Credits;
-
-            $isAlreadyStored   = $usersCreditsModel->fetchRow(
-                $usersCreditsModel->select()
-                                  ->where('refUser = ?', static::$user->getId())
-                                  ->where('reason = ?', 'BuyExplorationData')
-                                  ->where('balance = ?', - (int) $json['Cost'])
-                                  ->where('dateUpdated = ?', $json['timestamp'])
+            static::handleCredits(
+                'BuyExplorationData',
+                - (int) $json['Cost'],
+                static::generateDetails($json),
+                $json
             );
-
-            if(is_null($isAlreadyStored))
-            {
-                $insert                 = array();
-                $insert['refUser']      = static::$user->getId();
-                $insert['reason']       = 'BuyExplorationData';
-                $insert['balance']      = - (int) $json['Cost'];
-                $insert['dateUpdated']  = $json['timestamp'];
-
-                $stationId = static::findStationId($json);
-
-                if(!is_null($stationId))
-                {
-                    $insert['refStation']   = $stationId;
-                }
-
-                // Generate details
-                $details = static::generateDetails($json);
-                if(!is_null($details)){ $insert['details'] = $details; }
-
-                $usersCreditsModel->insert($insert);
-
-                unset($insert);
-            }
-            else
-            {
-                $details = static::generateDetails($json);
-
-                if($isAlreadyStored->details != $details)
-                {
-                    $usersCreditsModel->updateById(
-                        $isAlreadyStored->id,
-                        [
-                            'details' => $details,
-                        ]
-                    );
-                }
-
-                static::$return['msgnum']   = 101;
-                static::$return['msg']      = 'Message already stored';
-            }
-
-            unset($usersCreditsModel, $isAlreadyStored);
         }
 
         return static::$return;
@@ -80,12 +36,6 @@ class BuyExplorationData extends Event
     static private function generateDetails($json)
     {
         $details        = array();
-        $currentShipId  = static::findShipId($json);
-
-        if(!is_null($currentShipId))
-        {
-            $details['shipId'] = $currentShipId;
-        }
 
         if(array_key_exists('System', $json))
         {
