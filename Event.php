@@ -396,7 +396,7 @@ class Event
 
                                 if($systemCoordinates['x'] == $duplicateSystem->getX() && $systemCoordinates['y'] == $duplicateSystem->getY() && $systemCoordinates['z'] == $duplicateSystem->getZ())
                                 {
-                                    if(array_key_exists('SystemAddress', $json) && !is_null($duplicateSystem->getId64()))
+                                    if(array_key_exists('SystemAddress', $json) && is_null($duplicateSystem->getId64()))
                                     {
                                         $systemsModel   = new \Models_Systems;
                                         $systemsModel->updateById(
@@ -415,7 +415,7 @@ class Event
                         }
                         else
                         {
-                            if(array_key_exists('SystemAddress', $json) && !is_null($currentSystem->getId64()))
+                            if(array_key_exists('SystemAddress', $json) && is_null($currentSystem->getId64()))
                             {
                                 $systemsModel   = new \Models_Systems;
                                 $systemsModel->updateById(
@@ -432,7 +432,7 @@ class Event
                 }
                 else
                 {
-                    if(array_key_exists('SystemAddress', $json) && !is_null($currentSystem->getId64()))
+                    if(array_key_exists('SystemAddress', $json) && is_null($currentSystem->getId64()))
                     {
                         $systemsModel   = new \Models_Systems;
                         $systemsModel->updateById(
