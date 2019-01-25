@@ -48,6 +48,55 @@ trait Credits
             $insert['details'] = $details;
         }
 
+        $isAlreadyStored   = $usersCreditsModel->fetchRow(
+            $usersCreditsModel->select()
+                              ->where('refUser = ?', static::$user->getId())
+                              ->where('reason = ?', $reason)
+                              ->where('balance = ?', $balance)
+                              ->where('dateUpdated = ?', $json['timestamp'])
+        );
+
+        if(is_null($isAlreadyStored))
+        {
+            $usersCreditsModel->insert($insert);
+        }
+        else
+        {
+            // Those fields cannot change
+            unset($insert['refUser'], $insert['reason'], $insert['balance'], $insert['dateUpdated']);
+
+            // Check if some fields are different, if not remove them
+            if(array_key_exists('details', $insert) && $isAlreadyStored->details == $insert['details'])
+            {
+                unset($insert['details']);
+            }
+            if(array_key_exists('refStation', $insert) && $isAlreadyStored->refStation == $insert['refStation'])
+            {
+                unset($insert['refStation']);
+            }
+            if(array_key_exists('refShip', $insert) && $isAlreadyStored->refShip == $insert['refShip'])
+            {
+                unset($insert['refShip']);
+            }
+
+            if(count($insert) > 0)
+            {
+                $usersCreditsModel->updateById($isAlreadyStored->id, $insert);
+            }
+
+            static::$return['msgnum']   = 101;
+            static::$return['msg']      = 'Message already stored';
+
+            // Return FALSE for an update
+            unset($usersCreditsModel, $isAlreadyStored, $insert);
+            return false;
+        }
+
+        unset($usersCreditsModel, $isAlreadyStored, $insert);
+        return true;
+
+        //TODO: Fix table and add UNIQUE index for refUser/reason/balance/dateUpdated
+        /*
         try
         {
             $usersCreditsModel->insert($insert);
@@ -57,16 +106,7 @@ trait Credits
             // Based on unique index, this credit entry was already saved, check if it needs an update
             if(strpos($e->getMessage(), '1062 Duplicate') !== false)
             {
-                $isAlreadyStored   = $usersCreditsModel->fetchRow(
-                    $usersCreditsModel->select()
-                                      ->where('refUser = ?', static::$user->getId())
-                                      ->where('reason = ?', $reason)
-                                      ->where('balance = ?', $balance)
-                                      ->where('dateUpdated = ?', $json['timestamp'])
-                );
 
-                if(!is_null($isAlreadyStored))
-                {
                     // Those fields cannot change
                     unset($insert['refUser'], $insert['reason'], $insert['balance'], $insert['dateUpdated']);
 
@@ -115,5 +155,6 @@ trait Credits
         // Insert wasn't catched by the exception
         unset($usersCreditsModel, $isAlreadyStored, $insert);
         return true;
+        */
     }
 }
