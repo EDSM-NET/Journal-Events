@@ -11,7 +11,7 @@ class Scan extends Event
 {
     protected static $isOK          = true;
     protected static $description   = [
-        'Insert body if using EDSM importer or if "Delay scanned celestial bodies until docked?" is Off',
+        'Insert body if using EDSM importer, if "Delay scanned celestial bodies until docked?" is Off or if scan is older than a month.',
         'Insert celestial body in user scan.',
         'Update celestial body first discovery.',
     ];
@@ -45,6 +45,15 @@ class Scan extends Event
                 if(!is_null($currentBody))
                 {
                     $currentBody = $currentBody->id;
+
+                    // The message is recent and EDDN already have the body, most likely we can untick the wait for EDDN option!
+                    // This is done to prevent having too much bodies waiting in our temp table...
+                    if(static::$user->waitScanBodyFromEDDN() === true && strtotime($json['timestamp']) > strtotime('1 HOUR AGO'))
+                    {
+                        $usersModel = new \Models_Users;
+                        $usersModel->updateById(static::$user->getId(), ['waitScanBodyFromEDDN' => 0]);
+                        unset($usersModel);
+                    }
                 }
                 elseif(static::$softwareId == 1 || static::$user->waitScanBodyFromEDDN() === false || strtotime($json['timestamp']) < strtotime('1 MONTH AGO'))
                 {
@@ -57,15 +66,6 @@ class Scan extends Event
                         if($return === false)
                         {
                             // Just delete it... Software should pay better attention to follow the right system!
-                            /*
-                            static::$return['msgnum']   = 402;
-                            static::$return['msg']      = 'Item unknown';
-
-                            // Save in temp table for reparsing
-                            $json['isError']            = 1;
-                            \Journal\Event::run($json);
-                            */
-                            
                             return static::$return;
                         }
                     }
@@ -91,15 +91,57 @@ class Scan extends Event
                         }
                     }
 
-                    $currentBody = $systemsBodiesModel->fetchRow(
-                        $systemsBodiesModel->select()
-                                           ->where('refSystem = ?', $systemId)
-                                           ->where('name = ?', $json['BodyName'])
-                    );
-
-                    if(!is_null($currentBody))
+                    if(!is_null($return) && $return !== false)
                     {
-                        $currentBody = $currentBody->id;
+                        $currentBody = $return;
+                    }
+                    else
+                    {
+                        $currentBody = $systemsBodiesModel->fetchRow(
+                            $systemsBodiesModel->select()
+                                               ->where('refSystem = ?', $systemId)
+                                               ->where('name = ?', $json['BodyName'])
+                        );
+
+                        if(!is_null($currentBody))
+                        {
+                            $currentBody = $currentBody->id;
+                        }
+                    }
+                }
+            }
+            else
+            {
+                $systemId    = static::findSystemId($json);
+
+                // If found, then the system was most likely renamed...
+                if(!is_null($systemId))
+                {
+                    $currentSystem = \Component\System::getInstance($systemId);
+
+                    if(array_key_exists('_systemName', $json) && !empty($json['_systemName']) && $currentSystem->getName() != $json['_systemName'])
+                    {
+                        // Just delete it... It will mostly have been merged on rename or scanned again
+                        return static::$return;
+                    }
+                    // At some point if we don't have a proper system, just delete!
+                    elseif(strtotime($json['timestamp']) < strtotime('3 MONTH AGO'))
+                    {
+                        return static::$return;
+                    }
+                }
+                else
+                {
+                    // Some events only contains BodyName and StarType, avoid empty events by checking the distance which is mandatory
+                    if(!array_key_exists('DistanceFromArrivalLS', $json) OR !array_key_exists('_systemName', $json) OR (array_key_exists('_systemName', $json) && empty($json['_systemName'])))
+                    {
+                        // Just delete it...
+                        return static::$return;
+                    }
+                    // At some point if we don't have a proper system, just delete!
+                    elseif(strtotime($json['timestamp']) < strtotime('3 MONTH AGO'))
+                    {
+                        return static::$return;
                     }
                 }
             }
