@@ -441,62 +441,6 @@ class FSDJump extends Event
             $systemsLogsModel           = new \Models_Systems_Logs;
             static::$return['systemId'] = $currentSystem->getId();
 
-            // Check before/after flight logs
-            $before = $systemsLogsModel->select()
-                                       ->where('user = ?', static::$user->getId())
-                                       ->where('dateVisited < ?', $json['timestamp'])
-                                       ->limit(1)
-                                       ->order('dateVisited DESC');
-            $before = $systemsLogsModel->fetchRow($before);
-
-            if(!is_null($before))
-            {
-                if($before->system == $currentSystem->getId())
-                {
-                    // Check if time difference is more than a couple of seconds
-                    if(abs(strtotime($before->dateVisited) - strtotime($json['timestamp'])) >= 20)
-                    {
-                        static::$return['msgnum']   = 452;
-                        static::$return['msg']      = 'An entry for the same system already exists just before the visited date (#' . $before->id . ').';
-
-                        return static::$return;
-                    }
-                    else
-                    {
-                        // Delete to store the new precise timestamp
-                        $systemsLogsModel->deleteById($before->id);
-                        $before = null;
-                    }
-                }
-            }
-
-            $after  = $systemsLogsModel->select()
-                                       ->where('user = ?', static::$user->getId())
-                                       ->where('dateVisited > ?', $json['timestamp'])
-                                       ->limit(1)
-                                       ->order('dateVisited ASC');
-            $after  = $systemsLogsModel->fetchRow($after);
-            if(!is_null($after))
-            {
-                if($after->system == $currentSystem->getId())
-                {
-                    // Check if time difference is more than a couple of seconds
-                    if(abs(strtotime($after->dateVisited) - strtotime($json['timestamp'])) >= 20)
-                    {
-                        static::$return['msgnum']   = 453;
-                        static::$return['msg']      = 'An entry for the same system already exists just after the visited date (#' . $after->id . ').';
-
-                        return static::$return;
-                    }
-                    else
-                    {
-                        // Delete to store the new precise timestamp
-                        $systemsLogsModel->deleteById($after->id);
-                        $after = null;
-                    }
-                }
-            }
-
             $insert                 = array();
             $insert['system']       = static::$return['systemId'];
             $insert['user']         = static::$user->getId();
@@ -648,7 +592,7 @@ class FSDJump extends Event
             }
 
             // Update ship current system and fuel if needed
-            if(is_null($after) && !is_null($currentShipId))
+            if(!is_null($currentShipId))
             {
                 static::updateCurrentGameShipId($currentShipId, $json['timestamp']);
 
