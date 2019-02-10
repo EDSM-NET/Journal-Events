@@ -17,6 +17,8 @@ class Scan extends Event
     ];
 
 
+    static public $insertBody       = false;
+
 
     public static function run($json)
     {
@@ -36,16 +38,23 @@ class Scan extends Event
 
             if(!is_null($systemId))
             {
-                $currentBody = $systemsBodiesModel->fetchRow(
-                    $systemsBodiesModel->select()
-                                       ->where('refSystem = ?', $systemId)
-                                       ->where('name = ?', $json['BodyName'])
-                );
+                // Use cache to fetch all bodies in the current system
+                $systemBodies = $systemsBodiesModel->getByRefSystem($systemId);
+
+                if(!is_null($systemBodies) && count($systemBodies) > 0)
+                {
+                    foreach($systemBodies AS $currentSystemBody)
+                    {
+                        if($currentSystemBody['name'] == $json['BodyName'])
+                        {
+                            $currentBody = $currentSystemBody['id'];
+                            break;
+                        }
+                    }
+                }
 
                 if(!is_null($currentBody))
                 {
-                    $currentBody = $currentBody->id;
-
                     // The message is recent and EDDN already have the body, most likely we can untick the wait for EDDN option!
                     // This is done to prevent having too much bodies waiting in our temp table...
                     if(static::$user->waitScanBodyFromEDDN() === true && strtotime($json['timestamp']) > strtotime('1 HOUR AGO'))
@@ -57,6 +66,8 @@ class Scan extends Event
                 }
                 elseif(static::$softwareId == 1 || static::$user->waitScanBodyFromEDDN() === false || strtotime($json['timestamp']) < strtotime('1 MONTH AGO'))
                 {
+                    $return = null;
+                    
                     // Reimport EDDN message
                     try
                     {
@@ -139,7 +150,7 @@ class Scan extends Event
                         return static::$return;
                     }
                     // At some point if we don't have a proper system, just delete!
-                    elseif(strtotime($json['timestamp']) < strtotime('3 MONTH AGO'))
+                    elseif(strtotime($json['timestamp']) < strtotime('1 MONTH AGO'))
                     {
                         return static::$return;
                     }
@@ -192,6 +203,13 @@ class Scan extends Event
                 }
             }
         }
+
+        // Reset current date scan stats
+        $usersExplorationValuesModel            = new \Models_Users_Exploration_Values;
+        $usersExplorationValuesModel->deleteByRefUserAndRefDate(
+            static::$user->getId(),
+            date('Y-m-d', strtotime($json['timestamp']))
+        );
 
         $firstScannedBy = $systemsBodiesUsersModel->getFirstScannedByRefBody($currentBody);
 

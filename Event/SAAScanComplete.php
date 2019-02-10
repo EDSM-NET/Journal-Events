@@ -15,7 +15,7 @@ class SAAScanComplete extends Event
         'Update celestial body first mapping.',
     ];
 
-    // { "timestamp":"2018-10-31T13:30:12Z", "event":"SAAScanComplete", "BodyName":"HIP 63835 CD 8", "BodyID":16, "Discoverers":[ "Dirk Gently" ], "Mappers":[ "Askon Voidborn" ], "ProbesUsed":28, "EfficiencyTarget":21 }
+    // { "timestamp":"2018-10-31T13:30:12Z", "event":"SAAScanComplete", "BodyName":"HIP 63835 CD 8", "BodyID":16, "ProbesUsed":28, "EfficiencyTarget":21 }
 
     public static function run($json)
     {
@@ -35,26 +35,35 @@ class SAAScanComplete extends Event
 
             if(!is_null($systemId))
             {
-                $currentBody = $systemsBodiesModel->fetchRow(
-                    $systemsBodiesModel->select()
-                                       ->where('refSystem = ?', $systemId)
-                                       ->where('name = ?', $json['BodyName'])
-                );
+                // Use cache to fetch all bodies in the current system
+                $systemBodies = $systemsBodiesModel->getByRefSystem($systemId);
+
+                if(!is_null($systemBodies) && count($systemBodies) > 0)
+                {
+                    foreach($systemBodies AS $currentSystemBody)
+                    {
+                        if($currentSystemBody['name'] == $json['BodyName'])
+                        {
+                            $currentBody = $currentSystemBody;
+                            break;
+                        }
+                    }
+                }
 
                 if(!is_null($currentBody))
                 {
                     // Update efficiencyTarget if needed
-                    if($currentBody->efficiencyTarget != $json['EfficiencyTarget'])
+                    if(!array_key_exists('efficiencyTarget', $currentBody) || (array_key_exists('efficiencyTarget', $currentBody) && $currentBody['efficiencyTarget'] != $json['EfficiencyTarget']))
                     {
                         $systemsBodiesModel->updateById(
-                            $currentBody->id,
+                            $currentBody['id'],
                             array(
                                 'efficiencyTarget'  => $json['EfficiencyTarget'],
                             )
                         );
                     }
 
-                    $currentBody = $currentBody->id;
+                    $currentBody = $currentBody['id'];
                 }
             }
         }

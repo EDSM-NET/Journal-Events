@@ -21,6 +21,11 @@ class SearchAndRescue extends Event
 
     public static function run($json)
     {
+        if((int) $json['Reward'] == 0)
+        {
+            return static::$return;
+        }
+
         $currentItemId  = \Alias\Station\Commodity\Type::getFromFd($json['Name']);
 
         if(is_null($currentItemId))
