@@ -48,50 +48,81 @@ trait Credits
             $insert['details'] = $details;
         }
 
-        $isAlreadyStored   = $usersCreditsModel->fetchRow(
-            $usersCreditsModel->select()
-                              ->where('refUser = ?', static::$user->getId())
-                              ->where('reason = ?', $reason)
-                              ->where('balance = ?', $balance)
-                              ->where('dateUpdated = ?', $json['timestamp'])
-        );
-
-        if(is_null($isAlreadyStored))
+        try
         {
             $usersCreditsModel->insert($insert);
         }
-        else
+        catch(\Zend_Db_Exception $e)
         {
-            // Those fields cannot change
-            unset($insert['refUser'], $insert['reason'], $insert['balance'], $insert['dateUpdated']);
-
-            // Check if some fields are different, if not remove them
-            if(array_key_exists('details', $insert) && $isAlreadyStored->details == $insert['details'])
+            // Based on unique index, this credit entry was already saved, check if it needs an update
+            if(strpos($e->getMessage(), '1062 Duplicate') !== false)
             {
-                unset($insert['details']);
-            }
-            if(array_key_exists('refStation', $insert) && $isAlreadyStored->refStation == $insert['refStation'])
-            {
-                unset($insert['refStation']);
-            }
-            if(array_key_exists('refShip', $insert) && $isAlreadyStored->refShip == $insert['refShip'])
-            {
-                unset($insert['refShip']);
-            }
+                $isAlreadyStored   = $usersCreditsModel->fetchRow(
+                    $usersCreditsModel->select()
+                                      ->where('refUser = ?', static::$user->getId())
+                                      ->where('reason = ?', $reason)
+                                      ->where('balance = ?', $balance)
+                                      ->where('dateUpdated = ?', $json['timestamp'])
+                );
 
-            if(count($insert) > 0)
-            {
-                $usersCreditsModel->updateById($isAlreadyStored->id, $insert);
+                if(!is_null($isAlreadyStored))
+                {
+                    // Those fields cannot change
+                    unset($insert['refUser'], $insert['reason'], $insert['balance'], $insert['dateUpdated']);
+
+                    // Check if some fields are different, if not remove them
+                    if(array_key_exists('details', $insert) && $isAlreadyStored->details == $insert['details'])
+                    {
+                        unset($insert['details']);
+                    }
+                    else
+                    {
+                        //TODO: Check if NpcCrewPaidWage or MissionCompleted or make an array of IDs
+                    }
+                    if(array_key_exists('refStation', $insert) && $isAlreadyStored->refStation == $insert['refStation'])
+                    {
+                        unset($insert['refStation']);
+                    }
+                    if(array_key_exists('refShip', $insert) && $isAlreadyStored->refShip == $insert['refShip'])
+                    {
+                        unset($insert['refShip']);
+                    }
+
+                    if(count($insert) > 0)
+                    {
+                        $usersCreditsModel->updateLine(
+                            static::$user->getId(),
+                            $reason,
+                            $balance,
+                            $json['timestamp'],
+                            $insert
+                        );
+                    }
+
+                    static::$return['msgnum']   = 101;
+                    static::$return['msg']      = 'Message already stored';
+
+                    // Return FALSE for an update
+                    unset($usersCreditsModel, $isAlreadyStored, $insert);
+                    return false;
+                }
             }
+            else
+            {
+                static::$return['msgnum']   = 500;
+                static::$return['msg']      = 'Exception: ' . $e->getMessage();
 
-            static::$return['msgnum']   = 101;
-            static::$return['msg']      = 'Message already stored';
+                $registry = \Zend_Registry::getInstance();
 
-            // Return FALSE for an update
-            unset($usersCreditsModel, $isAlreadyStored, $insert);
-            return false;
+                if($registry->offsetExists('sentryClient'))
+                {
+                    $sentryClient = $registry->offsetGet('sentryClient');
+                    $sentryClient->captureException($e);
+                }
+            }
         }
 
+        // Insert wasn't catched by the exception
         unset($usersCreditsModel, $isAlreadyStored, $insert);
         return true;
     }
