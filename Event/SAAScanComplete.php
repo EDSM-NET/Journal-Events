@@ -35,6 +35,21 @@ class SAAScanComplete extends Event
 
             if(!is_null($systemId))
             {
+                // Is it an aliased body name or can we remove the system name from it?
+                $bodyName   = $json['BodyName'];
+                $isAliased  = \Alias\Body\Name::isAliased($systemId, $bodyName);
+
+                if($isAliased === false)
+                {
+                    $currentSystem  = \Component\System::getInstance($systemId);
+                    $systemName     = $currentSystem->getName();
+
+                    if(substr(strtolower($bodyName), 0, strlen($systemName)) == strtolower($systemName))
+                    {
+                        $bodyName = trim(str_ireplace($systemName, '', $bodyName));
+                    }
+                }
+
                 // Use cache to fetch all bodies in the current system
                 $systemBodies = $systemsBodiesModel->getByRefSystem($systemId);
 
@@ -42,7 +57,9 @@ class SAAScanComplete extends Event
                 {
                     foreach($systemBodies AS $currentSystemBody)
                     {
-                        if($currentSystemBody['name'] == $json['BodyName'])
+                        //if($currentSystemBody['name'] == $json['BodyName'])
+                        // Complete name format or just body part
+                        if(strtolower($currentSystemBody['name']) == strtolower($bodyName) || strtolower($currentSystemBody['name']) == strtolower($json['BodyName']))
                         {
                             $currentBody = $currentSystemBody;
                             break;

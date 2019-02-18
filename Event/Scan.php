@@ -38,6 +38,21 @@ class Scan extends Event
 
             if(!is_null($systemId))
             {
+                // Is it an aliased body name or can we remove the system name from it?
+                $bodyName   = $json['BodyName'];
+                $isAliased  = \Alias\Body\Name::isAliased($systemId, $bodyName);
+
+                if($isAliased === false)
+                {
+                    $currentSystem  = \Component\System::getInstance($systemId);
+                    $systemName     = $currentSystem->getName();
+
+                    if(substr(strtolower($bodyName), 0, strlen($systemName)) == strtolower($systemName))
+                    {
+                        $bodyName = trim(str_ireplace($systemName, '', $bodyName));
+                    }
+                }
+
                 // Use cache to fetch all bodies in the current system
                 $systemBodies = $systemsBodiesModel->getByRefSystem($systemId);
 
@@ -45,7 +60,9 @@ class Scan extends Event
                 {
                     foreach($systemBodies AS $currentSystemBody)
                     {
-                        if($currentSystemBody['name'] == $json['BodyName'])
+                        //if($currentSystemBody['name'] == $json['BodyName'])
+                        // Complete name format or just body part
+                        if(strtolower($currentSystemBody['name']) == strtolower($bodyName) || strtolower($currentSystemBody['name']) == strtolower($json['BodyName']))
                         {
                             $currentBody = $currentSystemBody['id'];
                             break;
@@ -67,7 +84,7 @@ class Scan extends Event
                 elseif(static::$softwareId == 1 || static::$user->waitScanBodyFromEDDN() === false || strtotime($json['timestamp']) < strtotime('1 MONTH AGO'))
                 {
                     $return = null;
-                    
+
                     // Reimport EDDN message
                     try
                     {
@@ -111,7 +128,7 @@ class Scan extends Event
                         $currentBody = $systemsBodiesModel->fetchRow(
                             $systemsBodiesModel->select()
                                                ->where('refSystem = ?', $systemId)
-                                               ->where('name = ?', $json['BodyName'])
+                                               ->where('name = ? OR name = "' . $bodyName . '"', $json['BodyName'])
                         );
 
                         if(!is_null($currentBody))
