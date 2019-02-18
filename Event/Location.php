@@ -14,6 +14,7 @@ class Location extends Event
     protected static $isOK          = true;
     protected static $description   = [
         'Update ship current system/station.',
+        'Insert FSDJump in case of mismatched location'
     ];
 
 
@@ -73,6 +74,36 @@ class Location extends Event
             }
         }
 
+        // Insert a fake FSDJump in case of death or game failure.
+        $systemId = static::findSystemId($json);
+
+        if(!is_null($systemId))
+        {
+            $systemsLogsModel   = new \Models_Systems_Logs;
+            $lastFSDJump        = $systemsLogsModel->fetchRow(
+                $systemsLogsModel->select()
+                                 ->where('user = ?', static::$user->getId())
+                                 ->where('dateVisited <= ?', $json['timestamp'])
+                                 ->order('dateVisited DESC')
+                                 ->limit(1)
+            );
+
+            if(is_null($lastFSDJump) || (!is_null($lastFSDJump) && $lastFSDJump->system != $systemId))
+            {
+                $insert                 = array();
+                $insert['user']         = static::$user->getId();
+                $insert['system']       = $systemId;
+                $insert['dateVisited']  = $json['timestamp'];
+
+                $systemsLogsModel->insert($insert);
+
+                unset($insert);
+            }
+
+            unset($systemsLogsModel);
+        }
+
+        // Handle user faction reputation
         if(array_key_exists('Factions', $json))
         {
             static::handleMyReputation($json['Factions'], $json['timestamp']);

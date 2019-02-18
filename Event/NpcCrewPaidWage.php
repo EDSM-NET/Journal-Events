@@ -20,12 +20,15 @@ class NpcCrewPaidWage extends Event
 
     public static function run($json)
     {
-        static::handleCredits(
-            'NpcCrewPaidWage',
-            - (int) $json['Amount'],
-            static::generateDetails($json),
-            $json
-        );
+        if($json['Amount'] > 0)
+        {
+            static::handleCredits(
+                'NpcCrewPaidWage',
+                - (int) $json['Amount'],
+                static::generateDetails($json),
+                $json
+            );
+        }
 
         return static::$return;
     }
