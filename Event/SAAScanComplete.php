@@ -134,7 +134,25 @@ class SAAScanComplete extends Event
             }
         }
 
-        unset($systemsBodiesUsersSAAModel);
+        // Reset date scan stats for each users
+        $usersExplorationValuesModel            = new \Models_Users_Exploration_Values;
+        $systemsBodiesUsersModel                = new \Models_Systems_Bodies_Users;
+
+        $usersExplorationValuesModel->deleteByRefUserAndRefDate(
+            static::$user->getId(),
+            date('Y-m-d', strtotime($json['timestamp']))
+        );
+
+        $usersScans                             = $systemsBodiesUsersModel->getByRefBody($currentBody);
+        foreach($usersScans AS $userScan)
+        {
+            $usersExplorationValuesModel->deleteByRefUserAndRefDate(
+                $userScan['refUser'],
+                date('Y-m-d', strtotime($userScan['dateScanned']))
+            );
+        }
+
+        unset($systemsBodiesUsersSAAModel, $usersExplorationValuesModel, $systemsBodiesUsersModel);
 
         return static::$return;
     }

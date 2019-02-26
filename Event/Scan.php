@@ -221,18 +221,26 @@ class Scan extends Event
             }
         }
 
-        // Reset current date scan stats
+        // Reset date scan stats for each users
         $usersExplorationValuesModel            = new \Models_Users_Exploration_Values;
         $usersExplorationValuesModel->deleteByRefUserAndRefDate(
             static::$user->getId(),
             date('Y-m-d', strtotime($json['timestamp']))
         );
 
-        $firstScannedBy = $systemsBodiesUsersModel->getFirstScannedByRefBody($currentBody);
+        $usersScans                             = $systemsBodiesUsersModel->getByRefBody($currentBody);
+        foreach($usersScans AS $userScan)
+        {
+            $usersExplorationValuesModel->deleteByRefUserAndRefDate(
+                $userScan['refUser'],
+                date('Y-m-d', strtotime($userScan['dateScanned']))
+            );
+        }
 
-        unset($systemsBodiesUsersModel);
+        unset($usersExplorationValuesModel);
 
         //BADGES
+        $firstScannedBy = $systemsBodiesUsersModel->getFirstScannedByRefBody($currentBody);
         if(!is_null($firstScannedBy) && $firstScannedBy['refUser'] == static::$user->getId())
         {
             $currentBodyData = $systemsBodiesModel->getById($currentBody);
@@ -305,7 +313,7 @@ class Scan extends Event
             unset($currentBodyData);
         }
 
-        unset($systemsBodiesModel);
+        unset($systemsBodiesModel, $systemsBodiesUsersModel);
 
         return static::$return;
     }
