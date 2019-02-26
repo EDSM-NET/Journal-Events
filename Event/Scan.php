@@ -28,8 +28,8 @@ class Scan extends Event
             return static::$return; // @See EDDN\System\Body
         }
 
-        $currentBody        = null;
-        $systemsBodiesModel = new \Models_Systems_Bodies;
+        $currentBody            = null;
+        $systemsBodiesModel     = new \Models_Systems_Bodies;
 
         // Try to find body by name/refSystem
         if(is_null($currentBody))
@@ -60,11 +60,10 @@ class Scan extends Event
                 {
                     foreach($systemBodies AS $currentSystemBody)
                     {
-                        //if($currentSystemBody['name'] == $json['BodyName'])
                         // Complete name format or just body part
                         if(strtolower($currentSystemBody['name']) == strtolower($bodyName) || strtolower($currentSystemBody['name']) == strtolower($json['BodyName']))
                         {
-                            $currentBody = $currentSystemBody['id'];
+                            $currentBody    = $currentSystemBody['id'];
                             break;
                         }
                     }
@@ -74,12 +73,14 @@ class Scan extends Event
                 {
                     // The message is recent and EDDN already have the body, most likely we can untick the wait for EDDN option!
                     // This is done to prevent having too much bodies waiting in our temp table...
-                    if(static::$user->waitScanBodyFromEDDN() === true && strtotime($json['timestamp']) > strtotime('1 HOUR AGO'))
-                    {
-                        $usersModel = new \Models_Users;
-                        $usersModel->updateById(static::$user->getId(), ['waitScanBodyFromEDDN' => 0]);
-                        unset($usersModel);
-                    }
+                    //$referenceTime = strtotime('30 MINUTE AGO');
+                    //if(static::$user->waitScanBodyFromEDDN() === true && strtotime($json['timestamp']) > $referenceTime)
+                    //{
+                        // Get body and check againts last update date
+                        //$usersModel = new \Models_Users;
+                        //$usersModel->updateById(static::$user->getId(), ['waitScanBodyFromEDDN' => 0]);
+                        //unset($usersModel);
+                    //}
                 }
                 elseif(static::$softwareId == 1 || static::$user->waitScanBodyFromEDDN() === false || strtotime($json['timestamp']) < strtotime('1 MONTH AGO'))
                 {
@@ -231,10 +232,13 @@ class Scan extends Event
         $usersScans                             = $systemsBodiesUsersModel->getByRefBody($currentBody);
         foreach($usersScans AS $userScan)
         {
-            $usersExplorationValuesModel->deleteByRefUserAndRefDate(
-                $userScan['refUser'],
-                date('Y-m-d', strtotime($userScan['dateScanned']))
-            );
+            if(strtotime($userScan['dateScanned']) >= strtotime($json['timestamp']))
+            {
+                $usersExplorationValuesModel->deleteByRefUserAndRefDate(
+                    $userScan['refUser'],
+                    date('Y-m-d', strtotime($userScan['dateScanned']))
+                );
+            }
         }
 
         unset($usersExplorationValuesModel);

@@ -146,10 +146,13 @@ class SAAScanComplete extends Event
         $usersScans                             = $systemsBodiesUsersModel->getByRefBody($currentBody);
         foreach($usersScans AS $userScan)
         {
-            $usersExplorationValuesModel->deleteByRefUserAndRefDate(
-                $userScan['refUser'],
-                date('Y-m-d', strtotime($userScan['dateScanned']))
-            );
+            if(strtotime($userScan['dateScanned']) >= strtotime($json['timestamp']))
+            {
+                $usersExplorationValuesModel->deleteByRefUserAndRefDate(
+                    $userScan['refUser'],
+                    date('Y-m-d', strtotime($userScan['dateScanned']))
+                );
+            }
         }
 
         unset($systemsBodiesUsersSAAModel, $usersExplorationValuesModel, $systemsBodiesUsersModel);
