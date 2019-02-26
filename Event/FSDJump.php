@@ -89,6 +89,15 @@ class FSDJump extends Event
                 {
                     $insertSystem['id64'] = $systemId64;
                 }
+                else
+                {
+                    // Generate the PG systemAdress (Old journal and Console users)
+                    $id64 = \Component\System::calculateId64FromName($systemName);
+                    if(!is_null($id64))
+                    {
+                        $insertSystem['id64'] = $id64;
+                    }
+                }
                 if(!is_null($systemCoordinates))
                 {
                    $insertSystem = array_merge($insertSystem, $systemCoordinates);

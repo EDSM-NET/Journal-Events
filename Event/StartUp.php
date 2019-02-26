@@ -61,6 +61,20 @@ class StartUp extends Event
                    $insertSystem = array_merge($insertSystem, $systemCoordinates);
                 }
 
+                if(array_key_exists('SystemAddress', $json))
+                {
+                    $insert['id64'] = $json['SystemAddress'];
+                }
+                else
+                {
+                    // Generate the PG systemAdress (Old journal, Console users, cAPI)
+                    $id64 = \Component\System::calculateId64FromName($systemName);
+                    if(!is_null($id64))
+                    {
+                        $insert['id64'] = $id64;
+                    }
+                }
+
                 try
                 {
                     $systemId                           = $systemsModel->insert($insertSystem);
