@@ -82,7 +82,7 @@ class Scan extends Event
                         //unset($usersModel);
                     //}
                 }
-                elseif(static::$softwareId == 1 || static::$user->waitScanBodyFromEDDN() === false || strtotime($json['timestamp']) < strtotime('1 MONTH AGO'))
+                elseif(in_array(static::$softwareId, [1, 1209, 1211]) || static::$user->waitScanBodyFromEDDN() === false || strtotime($json['timestamp']) < strtotime('1 MONTH AGO'))
                 {
                     $return = null;
 
