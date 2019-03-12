@@ -144,8 +144,13 @@ class SAAScanComplete extends Event
         );
 
         $usersScans                             = $systemsBodiesUsersModel->getByRefBody($currentBody);
-        foreach($usersScans AS $userScan)
+        foreach($usersScans AS $key => $userScan)
         {
+            if($key >= 2)
+            {
+                break;
+            }
+
             if(strtotime($userScan['dateScanned']) >= strtotime($json['timestamp']))
             {
                 $usersExplorationValuesModel->deleteByRefUserAndRefDate(

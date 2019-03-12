@@ -28,10 +28,23 @@ class FSDTarget extends Event
 
                 if(is_null($currentSystem->getId64()))
                 {
-                    $systemsModel->updateById(
-                        $currentSystem->getId(),
-                        ['id64' => $json['SystemAddress']]
-                    );
+                    try
+                    {
+                        $systemsModel->updateById(
+                            $currentSystem->getId(),
+                            ['id64' => $json['SystemAddress']]
+                        );
+                    }
+                    catch(\Zend_Db_Exception $e)
+                    {
+                        $registry = \Zend_Registry::getInstance();
+
+                        if($registry->offsetExists('sentryClient'))
+                        {
+                            $sentryClient = $registry->offsetGet('sentryClient');
+                            $sentryClient->captureException($e);
+                        }
+                    }
                 }
             }
             elseif(static::$user->isGalacticTeam())
@@ -40,6 +53,7 @@ class FSDTarget extends Event
                     'id64' => $json['SystemAddress'],
                     'name' => $json['Name']
                 ]);
+                static::$return['systemCreated']    = true;
             }
         }
 

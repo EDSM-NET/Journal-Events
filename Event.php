@@ -57,6 +57,7 @@ class Event
         '$paintjob_testbuggy_vibrant_red_name;',
 
         '$paintjob_federation_fighter_gladiator_blueblack_name;',
+        '$paintjob_indfighter_vibrant_yellow_name;',
 
         '$adder_cockpit_name;',
         '$anaconda_cockpit_name;',
@@ -90,6 +91,7 @@ class Event
         '$type7_cockpit_name;',
         '$type9_military_cockpit_name;',
         '$typex_cockpit_name;',
+        '$typex_3_cockpit_name;',
         '$viper_cockpit_name;',
         '$viper_mkiv_cockpit_name;',
         '$vulture_cockpit_name;',

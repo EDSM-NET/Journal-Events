@@ -45,7 +45,6 @@ class Discard
 
         // Fly events
         'StartJump',
-        'FSDTarget',
         'Touchdown',
         'Liftoff',
         'NavBeaconScan',
