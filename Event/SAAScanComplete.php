@@ -85,8 +85,6 @@ class SAAScanComplete extends Event
             }
         }
 
-        unset($systemsBodiesModel);
-
         // Save until body is known
         if(is_null($currentBody))
         {
@@ -134,6 +132,9 @@ class SAAScanComplete extends Event
             }
         }
 
+        // Trigger reset for Elastic search
+        $systemsBodiesModel->updateById($currentBody, ['inElastic' => 0]);
+
         // Reset date scan stats for each users
         $usersExplorationValuesModel            = new \Models_Users_Exploration_Values;
         $systemsBodiesUsersModel                = new \Models_Systems_Bodies_Users;
@@ -160,7 +161,7 @@ class SAAScanComplete extends Event
             }
         }
 
-        unset($systemsBodiesUsersSAAModel, $usersExplorationValuesModel, $systemsBodiesUsersModel);
+        unset($systemsBodiesModel, $systemsBodiesUsersSAAModel, $usersExplorationValuesModel, $systemsBodiesUsersModel);
 
         return static::$return;
     }
