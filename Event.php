@@ -67,6 +67,7 @@ class Event
         '$cobramkiii_cockpit_name;',
         '$cobramkiv_cockpit_name;',
         '$cutter_cockpit_name;',
+        '$diamondback_cockpit_name;',
         '$diamondbackxl_cockpit_name;',
         '$dolphin_cockpit_name;',
         '$eagle_cockpit_name;',

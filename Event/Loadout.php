@@ -181,7 +181,7 @@ class Loadout extends Event
                                     $insertModule['ammoInClip']     = (array_key_exists('AmmoInClip', $module)) ? $module['AmmoInClip'] : new \Zend_Db_Expr('NULL');
                                     $insertModule['ammoInHopper']   = (array_key_exists('AmmoInHopper', $module)) ? $module['AmmoInHopper'] : new \Zend_Db_Expr('NULL');
 
-                                    if(array_key_exists('Engineering', $module))
+                                    if(array_key_exists('Engineering', $module) && count($module['Engineering']) > 0)
                                     {
                                         $engineering = array();
 
@@ -341,9 +341,20 @@ class Loadout extends Event
                                                 \EDSM_Api_Logger_Alias::log('Alias\Station\Engineer\Blueprint\Type: ' . $module['Engineering']['BlueprintID'] . ' / ' . $module['Engineering']['BlueprintName'] . ' / ' . $module['Engineering']['Level']);
                                             }
                                         }
-                                        else
+                                        elseif($module['Engineering']['EngineerID'] <= PHP_INT_MAX)
                                         {
-                                            \EDSM_Api_Logger_Alias::log('Alias\Station\Engineer: ' . $module['Engineering']['EngineerID'] . ' / ' . $module['Engineering']['Engineer']);
+                                            if(array_key_exists('EngineerName', $module['Engineering']))
+                                            {
+                                                \EDSM_Api_Logger_Alias::log('Alias\Station\Engineer: ' . $module['Engineering']['EngineerID'] . ' / ' . $module['Engineering']['EngineerName']);
+                                            }
+                                            elseif(array_key_exists('Engineer', $module['Engineering']))
+                                            {
+                                                \EDSM_Api_Logger_Alias::log('Alias\Station\Engineer: ' . $module['Engineering']['EngineerID'] . ' / ' . $module['Engineering']['Engineer']);
+                                            }
+                                            else
+                                            {
+                                                \EDSM_Api_Logger_Alias::log('Alias\Station\Engineer: ' . $module['Engineering']['EngineerID']);
+                                            }
                                         }
                                     }
 
