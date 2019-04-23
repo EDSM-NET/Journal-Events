@@ -18,6 +18,11 @@ class USSDrop extends Event
 
     public static function run($json)
     {
+        if(empty($json['USSType']))
+        {
+            return static::$return;
+        }
+
         $aliasClass     = 'Alias\System\UssDrop';
         $currentItemId  = $aliasClass::getFromFd($json['USSType']);
 
