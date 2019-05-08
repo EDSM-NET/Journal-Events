@@ -181,7 +181,7 @@ class Loadout extends Event
                                     $insertModule['ammoInClip']     = (array_key_exists('AmmoInClip', $module)) ? $module['AmmoInClip'] : new \Zend_Db_Expr('NULL');
                                     $insertModule['ammoInHopper']   = (array_key_exists('AmmoInHopper', $module)) ? $module['AmmoInHopper'] : new \Zend_Db_Expr('NULL');
 
-                                    if(array_key_exists('Engineering', $module) && count($module['Engineering']) > 0)
+                                    if(array_key_exists('Engineering', $module) && count($module['Engineering']) > 0 && $module['Engineering']['EngineerID'] <= PHP_INT_MAX)
                                     {
                                         $engineering = array();
 
@@ -274,20 +274,27 @@ class Loadout extends Event
 
                                                             if(is_null($getOriginalValue))
                                                             {
-                                                                if(array_key_exists('ValueStr', $moduleModifier) && !array_key_exists('OriginalValue', $moduleModifier))
+                                                                if(strtotime($json['timestamp']) > strtotime('2019-05-02 18:00:00'))
                                                                 {
-                                                                    \EDSM_Api_Logger_Alias::log('Outfitting OriginalValue missing: ' . $useClass . '::' . $insertModule['refOutfitting'] . ': ' . $moduleModifier['ValueStr']);
+                                                                    if(array_key_exists('ValueStr', $moduleModifier) && !array_key_exists('OriginalValue', $moduleModifier))
+                                                                    {
+                                                                        \EDSM_Api_Logger_Alias::log('Outfitting OriginalValue missing: ' . $useClass . '::' . $insertModule['refOutfitting'] . ': ' . $moduleModifier['ValueStr'] . ' / ' . $module['Item']);
+                                                                    }
+                                                                    else
+                                                                    {
+                                                                        \EDSM_Api_Logger_Alias::log('Outfitting OriginalValue missing: ' . $useClass . '::' . $insertModule['refOutfitting'] . ': ' . $moduleModifier['OriginalValue'] . ' / ' . $module['Item']);
+                                                                    }
                                                                 }
-                                                                else
-                                                                {
-                                                                    \EDSM_Api_Logger_Alias::log('Outfitting OriginalValue missing: ' . $useClass . '::' . $insertModule['refOutfitting'] . ': ' . $moduleModifier['OriginalValue']);
-                                                                }
+
                                                             }
                                                             elseif(array_key_exists('OriginalValue', $moduleModifier))
                                                             {
-                                                                if($getOriginalValue != $moduleModifier['OriginalValue'] && $insertModule['refOutfitting'] != 4011 && $useClass != 'Alias\Station\Outfitting\Mass')
+                                                                if($getOriginalValue != $moduleModifier['OriginalValue'] && ($insertModule['refOutfitting'] != 4011 && $useClass != 'Alias\Station\Outfitting\Mass'))
                                                                 {
-                                                                    \EDSM_Api_Logger_Alias::log('Outfitting OriginalValue wrong: ' . $useClass . '::' . $insertModule['refOutfitting'] . ': ' . $moduleModifier['OriginalValue']);
+                                                                    if(strtotime($json['timestamp']) > strtotime('2019-05-02 18:00:00'))
+                                                                    {
+                                                                        \EDSM_Api_Logger_Alias::log('Outfitting OriginalValue wrong: ' . $useClass . '::' . $insertModule['refOutfitting'] . ': ' . $moduleModifier['OriginalValue'] . ' / ' . $module['Item']);
+                                                                    }
                                                                 }
                                                                 else
                                                                 {
@@ -341,7 +348,7 @@ class Loadout extends Event
                                                 \EDSM_Api_Logger_Alias::log('Alias\Station\Engineer\Blueprint\Type: ' . $module['Engineering']['BlueprintID'] . ' / ' . $module['Engineering']['BlueprintName'] . ' / ' . $module['Engineering']['Level']);
                                             }
                                         }
-                                        elseif($module['Engineering']['EngineerID'] <= PHP_INT_MAX)
+                                        else
                                         {
                                             if(array_key_exists('EngineerName', $module['Engineering']))
                                             {

@@ -722,7 +722,11 @@ class MissionAccepted extends Event
             // Extract donation from "mission_altruismcredits"
             if(!is_null($missionType) && $missionType > 450 && $missionType < 500)
             {
-                if(stripos($json['LocalisedName'], ' cr to the cause') !== false)
+                if(array_key_exists('Donation', $json) && is_int($json['Donation']))
+                {
+                    $missionDetails['donation'] = $json['Donation'];
+                }
+                elseif(stripos($json['LocalisedName'], ' cr to the cause') !== false)
                 {
                     $json['LocalisedName']      = str_ireplace('donate ', '', $json['LocalisedName']);
                     $json['LocalisedName']      = str_ireplace(' cr to the cause', '', $json['LocalisedName']);
