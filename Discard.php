@@ -138,5 +138,8 @@ class Discard
 
         // End of game
         'Shutdown',
+
+        // Temp Discard...
+        'FSSSignalDiscovered',
     ];
 }

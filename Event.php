@@ -92,6 +92,7 @@ class Event
         '$type7_cockpit_name;',
         '$type9_military_cockpit_name;',
         '$typex_cockpit_name;',
+        '$typex_2_cockpit_name;',
         '$typex_3_cockpit_name;',
         '$viper_cockpit_name;',
         '$viper_mkiv_cockpit_name;',
