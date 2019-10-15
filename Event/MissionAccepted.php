@@ -726,141 +726,138 @@ class MissionAccepted extends Event
                 {
                     $missionDetails['donation'] = $json['Donation'];
                 }
-                elseif(stripos($json['LocalisedName'], ' cr to the cause') !== false)
-                {
-                    $json['LocalisedName']      = str_ireplace('donate ', '', $json['LocalisedName']);
-                    $json['LocalisedName']      = str_ireplace(' cr to the cause', '', $json['LocalisedName']);
-                    $missionDetails['donation'] = str_ireplace(',', '', $json['LocalisedName']);
-                }
-                elseif(stripos($json['LocalisedName'], ' cr to prevent a medical emergency') !== false)
-                {
-                    $json['LocalisedName']      = str_ireplace('donate ', '', $json['LocalisedName']);
-                    $json['LocalisedName']      = str_ireplace(' cr to prevent a medical emergency', '', $json['LocalisedName']);
-                    $missionDetails['donation'] = str_ireplace(',', '', $json['LocalisedName']);
-                }
-                elseif(stripos($json['LocalisedName'], ' to tackle civil unrest') !== false)
-                {
-                    $json['LocalisedName']      = str_ireplace('provide ', '', $json['LocalisedName']);
-                    $json['LocalisedName']      = str_ireplace(' cr to tackle civil unrest.', '', $json['LocalisedName']);
-                    $json['LocalisedName']      = str_ireplace(' cr to tackle civil unrest', '', $json['LocalisedName']);
-                    $missionDetails['donation'] = str_ireplace(',', '', $json['LocalisedName']);
-                }
-                elseif(stripos($json['LocalisedName'], ' to help stop the famine') !== false)
-                {
-                    $json['LocalisedName']      = str_ireplace('please provide ', '', $json['LocalisedName']);
-                    $json['LocalisedName']      = str_ireplace(' cr to help stop the famine', '', $json['LocalisedName']);
-                    $missionDetails['donation'] = str_ireplace(',', '', $json['LocalisedName']);
-                }
-                elseif(stripos($json['LocalisedName'], ' cr à la cause') !== false)
-                {
-                    $json['LocalisedName']      = str_ireplace('donnez ', '', $json['LocalisedName']);
-                    $json['LocalisedName']      = str_ireplace(' cr à la cause', '', $json['LocalisedName']);
-                    $missionDetails['donation'] = str_ireplace(chr(194).chr(160), '', $json['LocalisedName']);
-                }
-                elseif(stripos($json['LocalisedName'], ' cr pour régler le problème des émeutes') !== false)
-                {
-                    $json['LocalisedName']      = str_ireplace('procurez-nous ', '', $json['LocalisedName']);
-                    $json['LocalisedName']      = str_ireplace(' cr pour régler le problème des émeutes', '', $json['LocalisedName']);
-                    $missionDetails['donation'] = str_ireplace(chr(194).chr(160), '', $json['LocalisedName']);
-                }
-                elseif(stripos($json['LocalisedName'], ' cr pour lutter contre la famine') !== false)
-                {
-                    $json['LocalisedName']      = str_ireplace('s\'il vous plaît, faites un don de ', '', $json['LocalisedName']);
-                    $json['LocalisedName']      = str_ireplace(' cr pour lutter contre la famine', '', $json['LocalisedName']);
-                    $missionDetails['donation'] = str_ireplace(chr(194).chr(160), '', $json['LocalisedName']);
-                }
-                elseif(stripos($json['LocalisedName'], ' cr pour empêcher une situation d\'urgence médicale') !== false)
-                {
-                    $json['LocalisedName']      = str_ireplace('faites un don de ', '', $json['LocalisedName']);
-                    $json['LocalisedName']      = str_ireplace(' cr pour empêcher une situation d\'urgence médicale', '', $json['LocalisedName']);
-                    $missionDetails['donation'] = str_ireplace(chr(194).chr(160), '', $json['LocalisedName']);
-                }
-                elseif(stripos($json['LocalisedName'], ' Cr a la causa') !== false)
-                {
-                    $json['LocalisedName']      = str_ireplace(' Cr a la causa', '', $json['LocalisedName']);
-                    $json['LocalisedName']      = str_ireplace('Haz una donación de ', '', $json['LocalisedName']);
-                    $missionDetails['donation'] = str_ireplace('.', '', $json['LocalisedName']);
-                }
-                elseif(stripos($json['LocalisedName'], ' Cr pela causa') !== false)
-                {
-                    $json['LocalisedName']      = str_ireplace(' Cr pela causa', '', $json['LocalisedName']);
-                    $json['LocalisedName']      = str_ireplace('Doe ', '', $json['LocalisedName']);
-                    $missionDetails['donation'] = str_ireplace('.', '', $json['LocalisedName']);
-                }
-                elseif(stripos($json['LocalisedName'], ' Cr para evitar una emergencia médica') !== false)
-                {
-                    $json['LocalisedName']      = str_ireplace(' Cr para evitar una emergencia médica', '', $json['LocalisedName']);
-                    $json['LocalisedName']      = str_ireplace('Dona ', '', $json['LocalisedName']);
-                    $missionDetails['donation'] = str_ireplace('.', '', $json['LocalisedName']);
-                }
-                elseif(stripos($json['LocalisedName'], ' Cr para hacer frente a los disturbios civiles') !== false)
-                {
-                    $json['LocalisedName']      = str_ireplace(' Cr para hacer frente a los disturbios civiles', '', $json['LocalisedName']);
-                    $json['LocalisedName']      = str_ireplace('Proporciona ', '', $json['LocalisedName']);
-                    $missionDetails['donation'] = str_ireplace('.', '', $json['LocalisedName']);
-                }
-                elseif(stripos($json['LocalisedName'], ' Cr para ayudar a parar la hambruna') !== false)
-                {
-                    $json['LocalisedName']      = str_ireplace(' Cr para ayudar a parar la hambruna', '', $json['LocalisedName']);
-                    $json['LocalisedName']      = str_ireplace('Por favor proporciona ', '', $json['LocalisedName']);
-                    $missionDetails['donation'] = str_ireplace('.', '', $json['LocalisedName']);
-                }
-                elseif(stripos($json['LocalisedName'], ' cr für die sache spenden') !== false)
-                {
-                    $json['LocalisedName']      = str_ireplace(' cr für die sache spenden', '', $json['LocalisedName']);
-                    $missionDetails['donation'] = str_ireplace('.', '', $json['LocalisedName']);
-                }
-                elseif(stripos($json['LocalisedName'], ' CR, um einen medizinischen Notfall zu verhindern') !== false)
-                {
-                    $json['LocalisedName']      = str_ireplace(' CR, um einen medizinischen Notfall zu verhindern', '', $json['LocalisedName']);
-                    $json['LocalisedName']      = str_ireplace('Spenden Sie ', '', $json['LocalisedName']);
-                    $missionDetails['donation'] = str_ireplace('.', '', $json['LocalisedName']);
-                }
-                elseif(stripos($json['LocalisedName'], ' CR, um die Hungersnot aufzuhalten') !== false)
-                {
-                    $json['LocalisedName']      = str_ireplace(' CR, um die Hungersnot aufzuhalten', '', $json['LocalisedName']);
-                    $json['LocalisedName']      = str_ireplace('Geben Sie uns bitte ', '', $json['LocalisedName']);
-                    $missionDetails['donation'] = str_ireplace('.', '', $json['LocalisedName']);
-                }
-                elseif(stripos($json['LocalisedName'], ' CR Beschaffen, um zivile Unruhen einzudämmen') !== false)
-                {
-                    $json['LocalisedName']      = str_ireplace(' CR Beschaffen, um zivile Unruhen einzudämmen', '', $json['LocalisedName']);
-                    $missionDetails['donation'] = str_ireplace('.', '', $json['LocalisedName']);
-                }
-                elseif(stripos($json['LocalisedName'], 'Пожертвуйте на дело следующую сумму: ') !== false)
-                {
-                    $json['LocalisedName']      = str_ireplace('Пожертвуйте на дело следующую сумму: ', '', $json['LocalisedName']);
-                    $json['LocalisedName']      = str_ireplace(' КР.', '', $json['LocalisedName']);
-                    $missionDetails['donation'] = str_ireplace(chr(194).chr(160), '', $json['LocalisedName']);
-                }
-                elseif(stripos($json['LocalisedName'], ' КР., чтобы предотвратить чрезвычайное положение') !== false)
-                {
-                    $json['LocalisedName']      = str_replace(' КР., чтобы предотвратить чрезвычайное положение', '', $json['LocalisedName']);
-                    $json['LocalisedName']      = str_replace('Пожертвуйте ', '', $json['LocalisedName']);
-                    $missionDetails['donation'] = str_replace(chr(194).chr(160), '', $json['LocalisedName']);
-                }
-                elseif(stripos($json['LocalisedName'], ' КР., чтобы справиться с гражданскими беспорядками') !== false)
-                {
-                    $json['LocalisedName']      = str_replace(' КР., чтобы справиться с гражданскими беспорядками.', '', $json['LocalisedName']);
-                    $json['LocalisedName']      = str_replace('Предоставьте ', '', $json['LocalisedName']);
-                    $missionDetails['donation'] = str_replace(chr(194).chr(160), '', $json['LocalisedName']);
-                }
-                elseif(stripos($json['LocalisedName'], ' КР., чтобы помочь остановить голод') !== false)
-                {
-                    $json['LocalisedName']      = str_replace(' КР., чтобы помочь остановить голод', '', $json['LocalisedName']);
-                    $json['LocalisedName']      = str_replace('Пожалуйста, пожертвуйте ', '', $json['LocalisedName']);
-                    $missionDetails['donation'] = str_replace(chr(194).chr(160), '', $json['LocalisedName']);
-
-                    //\Zend_Debug::dump($missionDetails['donation']); exit();
-                }
                 else
                 {
-                    static::$return['msgnum']   = 402;
-                    static::$return['msg']      = 'Item unknown';
+                    if(stripos($json['LocalisedName'], ' cr to the cause') !== false)
+                    {
+                        $json['LocalisedName']      = str_ireplace('donate ', '', $json['LocalisedName']);
+                        $missionDetails['donation'] = str_ireplace(' cr to the cause', '', $json['LocalisedName']);
+                    }
+                    elseif(stripos($json['LocalisedName'], ' cr to prevent a medical emergency') !== false)
+                    {
+                        $json['LocalisedName']      = str_ireplace('donate ', '', $json['LocalisedName']);
+                        $missionDetails['donation'] = str_ireplace(' cr to prevent a medical emergency', '', $json['LocalisedName']);
+                    }
+                    elseif(stripos($json['LocalisedName'], ' to tackle civil unrest') !== false)
+                    {
+                        $json['LocalisedName']      = str_ireplace('provide ', '', $json['LocalisedName']);
+                        $json['LocalisedName']      = str_ireplace(' cr to tackle civil unrest.', '', $json['LocalisedName']);
+                        $missionDetails['donation'] = str_ireplace(' cr to tackle civil unrest', '', $json['LocalisedName']);
+                    }
+                    elseif(stripos($json['LocalisedName'], ' to help stop the famine') !== false)
+                    {
+                        $json['LocalisedName']      = str_ireplace('please provide ', '', $json['LocalisedName']);
+                        $missionDetails['donation'] = str_ireplace(' cr to help stop the famine', '', $json['LocalisedName']);
+                    }
+                    elseif(stripos($json['LocalisedName'], ' cr à la cause') !== false)
+                    {
+                        $json['LocalisedName']      = str_ireplace('donnez ', '', $json['LocalisedName']);
+                        $json['LocalisedName']      = str_ireplace(' cr à la cause', '', $json['LocalisedName']);
+                        $missionDetails['donation'] = str_ireplace(chr(194).chr(160), '', $json['LocalisedName']);
+                    }
+                    elseif(stripos($json['LocalisedName'], ' cr pour régler le problème des émeutes') !== false)
+                    {
+                        $json['LocalisedName']      = str_ireplace('procurez-nous ', '', $json['LocalisedName']);
+                        $json['LocalisedName']      = str_ireplace(' cr pour régler le problème des émeutes', '', $json['LocalisedName']);
+                        $missionDetails['donation'] = str_ireplace(chr(194).chr(160), '', $json['LocalisedName']);
+                    }
+                    elseif(stripos($json['LocalisedName'], ' cr pour lutter contre la famine') !== false)
+                    {
+                        $json['LocalisedName']      = str_ireplace('s\'il vous plaît, faites un don de ', '', $json['LocalisedName']);
+                        $json['LocalisedName']      = str_ireplace(' cr pour lutter contre la famine', '', $json['LocalisedName']);
+                        $missionDetails['donation'] = str_ireplace(chr(194).chr(160), '', $json['LocalisedName']);
+                    }
+                    elseif(stripos($json['LocalisedName'], ' cr pour empêcher une situation d\'urgence médicale') !== false)
+                    {
+                        $json['LocalisedName']      = str_ireplace('faites un don de ', '', $json['LocalisedName']);
+                        $json['LocalisedName']      = str_ireplace(' cr pour empêcher une situation d\'urgence médicale', '', $json['LocalisedName']);
+                        $missionDetails['donation'] = str_ireplace(chr(194).chr(160), '', $json['LocalisedName']);
+                    }
+                    elseif(stripos($json['LocalisedName'], ' Cr a la causa') !== false)
+                    {
+                        $json['LocalisedName']      = str_ireplace(' Cr a la causa', '', $json['LocalisedName']);
+                        $missionDetails['donation'] = str_ireplace('Haz una donación de ', '', $json['LocalisedName']);
+                    }
+                    elseif(stripos($json['LocalisedName'], ' Cr pela causa') !== false)
+                    {
+                        $json['LocalisedName']      = str_ireplace(' Cr pela causa', '', $json['LocalisedName']);
+                        $missionDetails['donation'] = str_ireplace('Doe ', '', $json['LocalisedName']);
+                    }
+                    elseif(stripos($json['LocalisedName'], ' Cr para evitar una emergencia médica') !== false)
+                    {
+                        $json['LocalisedName']      = str_ireplace(' Cr para evitar una emergencia médica', '', $json['LocalisedName']);
+                        $missionDetails['donation'] = str_ireplace('Dona ', '', $json['LocalisedName']);
+                    }
+                    elseif(stripos($json['LocalisedName'], ' Cr para hacer frente a los disturbios civiles') !== false)
+                    {
+                        $json['LocalisedName']      = str_ireplace(' Cr para hacer frente a los disturbios civiles', '', $json['LocalisedName']);
+                        $json['LocalisedName']      = str_ireplace('Proporciona ', '', $json['LocalisedName']);
+                        $missionDetails['donation'] = str_ireplace('.', '', $json['LocalisedName']);
+                    }
+                    elseif(stripos($json['LocalisedName'], ' Cr para ayudar a parar la hambruna') !== false)
+                    {
+                        $json['LocalisedName']      = str_ireplace(' Cr para ayudar a parar la hambruna', '', $json['LocalisedName']);
+                        $missionDetails['donation'] = str_ireplace('Por favor proporciona ', '', $json['LocalisedName']);
+                    }
+                    elseif(stripos($json['LocalisedName'], ' cr für die sache spenden') !== false)
+                    {
+                        $missionDetails['donation'] = str_ireplace(' cr für die sache spenden', '', $json['LocalisedName']);
+                    }
+                    elseif(stripos($json['LocalisedName'], ' CR, um einen medizinischen Notfall zu verhindern') !== false)
+                    {
+                        $json['LocalisedName']      = str_ireplace(' CR, um einen medizinischen Notfall zu verhindern', '', $json['LocalisedName']);
+                        $missionDetails['donation'] = str_ireplace('Spenden Sie ', '', $json['LocalisedName']);
+                    }
+                    elseif(stripos($json['LocalisedName'], ' CR, um die Hungersnot aufzuhalten') !== false)
+                    {
+                        $json['LocalisedName']      = str_ireplace(' CR, um die Hungersnot aufzuhalten', '', $json['LocalisedName']);
+                        $missionDetails['donation'] = str_ireplace('Geben Sie uns bitte ', '', $json['LocalisedName']);
+                    }
+                    elseif(stripos($json['LocalisedName'], ' CR Beschaffen, um zivile Unruhen einzudämmen') !== false)
+                    {
+                        $missionDetails['donation'] = str_ireplace(' CR Beschaffen, um zivile Unruhen einzudämmen', '', $json['LocalisedName']);
+                    }
+                    elseif(stripos($json['LocalisedName'], 'Пожертвуйте на дело следующую сумму: ') !== false)
+                    {
+                        $json['LocalisedName']      = str_ireplace('Пожертвуйте на дело следующую сумму: ', '', $json['LocalisedName']);
+                        $json['LocalisedName']      = str_ireplace(' КР.', '', $json['LocalisedName']);
+                        $missionDetails['donation'] = str_ireplace(chr(194).chr(160), '', $json['LocalisedName']);
+                    }
+                    elseif(stripos($json['LocalisedName'], ' КР., чтобы предотвратить чрезвычайное положение') !== false)
+                    {
+                        $json['LocalisedName']      = str_replace(' КР., чтобы предотвратить чрезвычайное положение', '', $json['LocalisedName']);
+                        $json['LocalisedName']      = str_replace('Пожертвуйте ', '', $json['LocalisedName']);
+                        $missionDetails['donation'] = str_replace(chr(194).chr(160), '', $json['LocalisedName']);
+                    }
+                    elseif(stripos($json['LocalisedName'], ' КР., чтобы справиться с гражданскими беспорядками') !== false)
+                    {
+                        $json['LocalisedName']      = str_replace(' КР., чтобы справиться с гражданскими беспорядками.', '', $json['LocalisedName']);
+                        $json['LocalisedName']      = str_replace('Предоставьте ', '', $json['LocalisedName']);
+                        $missionDetails['donation'] = str_replace(chr(194).chr(160), '', $json['LocalisedName']);
+                    }
+                    elseif(stripos($json['LocalisedName'], ' КР., чтобы помочь остановить голод') !== false)
+                    {
+                        $json['LocalisedName']      = str_replace(' КР., чтобы помочь остановить голод', '', $json['LocalisedName']);
+                        $json['LocalisedName']      = str_replace('Пожалуйста, пожертвуйте ', '', $json['LocalisedName']);
+                        $missionDetails['donation'] = str_replace(chr(194).chr(160), '', $json['LocalisedName']);
 
-                    // Save in temp table for reparsing
-                    $json['isError']            = 1;
-                    \Journal\Event::run($json);
+                        //\Zend_Debug::dump($missionDetails['donation']); exit();
+                    }
+                    else
+                    {
+                        static::$return['msgnum']   = 402;
+                        static::$return['msg']      = 'Item unknown';
+
+                        // Save in temp table for reparsing
+                        $json['isError']            = 1;
+                        \Journal\Event::run($json);
+                    }
+
+                    if(array_key_exists('donation', $missionDetails))
+                    {
+                        $missionDetails['donation'] = str_ireplace('.', '', $missionDetails['donation']);
+                        $missionDetails['donation'] = str_ireplace(',', '', $missionDetails['donation']);
+                    }
                 }
             }
         }
