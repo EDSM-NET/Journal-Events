@@ -166,7 +166,7 @@ class MissionRedirected extends Event
                     if(array_key_exists('refDestinationSystem', $update) && !is_null($update['refDestinationSystem']))
                     {
                         $currentSystem = \Component\System::getInstance($update['refDestinationSystem']);
-                        $stations      = $currentSystem->getStations();
+                        $stations      = $currentSystem->getStations(true);
 
                         if(!is_null($stations))
                         {

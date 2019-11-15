@@ -13,6 +13,9 @@ class FSDTarget extends Event
     protected static $description   = [
         'Update a system ID64 if missing',
     ];
+    protected static $exceptions    = [
+        13889,
+    ];
 
     public static function run($json)
     {
@@ -47,7 +50,7 @@ class FSDTarget extends Event
                     }
                 }
             }
-            elseif(static::$user->isGalacticTeam())
+            elseif(static::$user->isGalacticTeam() || in_array(static::$user->getId(), static::$exceptions))
             {
                 $systemsModel->insert([
                     'id64' => $json['SystemAddress'],

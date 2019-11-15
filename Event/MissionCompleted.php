@@ -584,7 +584,7 @@ class MissionCompleted extends Event
             if(array_key_exists('refDestinationSystem', $missionDetails) && !is_null($missionDetails['refDestinationSystem']))
             {
                 $currentSystem = \Component\System::getInstance($missionDetails['refDestinationSystem']);
-                $stations      = $currentSystem->getStations();
+                $stations      = $currentSystem->getStations(true);
 
                 if(!is_null($stations))
                 {

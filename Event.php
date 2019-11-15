@@ -509,7 +509,7 @@ class Event
             if(!is_null($systemId))
             {
                 $currentSystem  = \Component\System::getInstance($systemId);
-                $stations       = $currentSystem->getStations();
+                $stations       = $currentSystem->getStations(true);
 
                 foreach($stations AS $station)
                 {
