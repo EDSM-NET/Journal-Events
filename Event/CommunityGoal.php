@@ -237,10 +237,8 @@ class CommunityGoal extends Event
 
             if(!is_null($stations))
             {
-                foreach($stations AS $station)
+                foreach($stations AS $currentStation)
                 {
-                    $currentStation = \EDSM_System_Station::getInstance($station['id']);
-
                     if($currentStation->getName() == $communityGoal['MarketName'])
                     {
                         return $currentStation->getId();

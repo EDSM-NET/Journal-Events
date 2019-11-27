@@ -80,7 +80,15 @@ class Docked extends Event
                 static::$user->giveBadge(600);
             }
 
+            // Follow up to get some EDDN feed for console users...
+            if(!is_null(static::$user->getPlatform()))
+            {
+                $station                    = \EDSM_System_Station::getInstance($stationId);
+                $system                     = $station->getSystem();
 
+                \EDDN\Station\Information::handle($system->getId(), $stationId, $json);
+                \EDDN\Station\Services::handle($stationId, $json);
+            }
         }
 
         // Give badge

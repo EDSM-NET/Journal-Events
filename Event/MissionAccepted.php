@@ -746,6 +746,7 @@ class MissionAccepted extends Event
                     }
                     elseif(stripos($json['LocalisedName'], ' to help stop the famine') !== false)
                     {
+                        $json['LocalisedName']      = str_ireplace('provide ', '', $json['LocalisedName']);
                         $json['LocalisedName']      = str_ireplace('please provide ', '', $json['LocalisedName']);
                         $missionDetails['donation'] = str_ireplace(' cr to help stop the famine', '', $json['LocalisedName']);
                     }
