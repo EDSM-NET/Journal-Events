@@ -144,13 +144,14 @@ class EngineerProgress extends Event
 
                     try
                     {
+                        $insert['refUser']      = static::$user->getId(); // Used to clean the cache!
+
                         if(!is_null($currentEngineer))
                         {
                             $usersEngineersModel->updateById($currentEngineer['id'], $insert);
                         }
                         else
                         {
-                            $insert['refUser']      = static::$user->getId();
                             $insert['refEngineer']  = $engineerId;
 
                             $usersEngineersModel->insert($insert);
