@@ -141,5 +141,7 @@ class Discard
 
         // Temp Discard...
         'FSSSignalDiscovered',
+        'AsteroidCracked',
+        'ProspectedAsteroid',
     ];
 }
