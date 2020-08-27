@@ -101,12 +101,9 @@ class Loadout extends Event
                         static::$return['msgnum']   = 500;
                         static::$return['msg']      = 'Exception: ' . $e->getMessage();
 
-                        $registry = \Zend_Registry::getInstance();
-
-                        if($registry->offsetExists('sentryClient'))
+                        if(defined('APPLICATION_SENTRY') && APPLICATION_SENTRY === true)
                         {
-                            $sentryClient = $registry->offsetGet('sentryClient');
-                            $sentryClient->captureException($e);
+                            \Sentry\captureException($e);
                         }
                     }
                 }
@@ -381,12 +378,9 @@ class Loadout extends Event
                                             static::$return['msgnum']   = 500;
                                             static::$return['msg']      = 'Exception: ' . $e->getMessage();
 
-                                            $registry = \Zend_Registry::getInstance();
-
-                                            if($registry->offsetExists('sentryClient'))
+                                            if(defined('APPLICATION_SENTRY') && APPLICATION_SENTRY === true)
                                             {
-                                                $sentryClient = $registry->offsetGet('sentryClient');
-                                                $sentryClient->captureException($e);
+                                                \Sentry\captureException($e);
                                             }
                                         }
                                     }

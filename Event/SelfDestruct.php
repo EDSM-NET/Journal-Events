@@ -13,13 +13,13 @@ class SelfDestruct extends Event
     protected static $description   = [
         'Register commander death.',
     ];
-    
-    
-    
+
+
+
     public static function run($json)
     {
         $systemId           = static::findSystemId($json);
-        
+
         if(!is_null($systemId))
         {
             try
@@ -29,16 +29,16 @@ class SelfDestruct extends Event
                 $insert['refSystem']    = $systemId;
                 $insert['reason']       = 'SelfDestruct';
                 $insert['dateEvent']    = $json['timestamp'];
-                
+
                 $shipId = static::findShipId($json);
                 if(!is_null($shipId))
                 {
                     $insert['refShip'] = $shipId;
                 }
-                
+
                 $usersDeathsModel = new \Models_Users_Deaths;
                 $usersDeathsModel->insert($insert);
-                
+
                 unset($usersDeathsModel, $insert);
             }
             catch(\Zend_Db_Exception $e)
@@ -53,18 +53,15 @@ class SelfDestruct extends Event
                 {
                     static::$return['msgnum']   = 500;
                     static::$return['msg']      = 'Exception: ' . $e->getMessage();
-                    
-                    $registry = \Zend_Registry::getInstance();
-                
-                    if($registry->offsetExists('sentryClient'))
+
+                    if(defined('APPLICATION_SENTRY') && APPLICATION_SENTRY === true)
                     {
-                        $sentryClient = $registry->offsetGet('sentryClient');
-                        $sentryClient->captureException($e);
+                        \Sentry\captureException($e);
                     }
                 }
             }
         }
-        
+
         return static::$return;
     }
 }

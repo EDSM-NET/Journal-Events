@@ -22,310 +22,302 @@ class Scan extends Event
 
     public static function run($json)
     {
-        // Do not handle Belt Cluster
-        if(stripos($json['BodyName'], 'Belt Cluster') !== false)
+        // Do not handle Belt Cluster or Rings
+        if(array_key_exists('StarType', $json) || array_key_exists('PlanetClass', $json))
         {
-            return static::$return; // @See EDDN\System\Body
-        }
+            $currentBody            = null;
+            $systemsBodiesModel     = new \Models_Systems_Bodies;
 
-        $currentBody            = null;
-        $systemsBodiesModel     = new \Models_Systems_Bodies;
-
-        // Try to find body by name/refSystem
-        if(is_null($currentBody))
-        {
-            $systemId    = static::findSystemId($json, true);
-
-            if(!is_null($systemId))
+            // Try to find body by name/refSystem
+            if(is_null($currentBody))
             {
-                // Is it an aliased body name or can we remove the system name from it?
-                $bodyName   = $json['BodyName'];
-                $isAliased  = \Alias\Body\Name::isAliased($systemId, $bodyName);
+                $systemId    = static::findSystemId($json, true);
 
-                if($isAliased === false)
+                if(!is_null($systemId))
                 {
-                    $currentSystem  = \Component\System::getInstance($systemId);
-                    $systemName     = $currentSystem->getName();
+                    // Is it an aliased body name or can we remove the system name from it?
+                    $bodyName   = $json['BodyName'];
+                    $isAliased  = \Alias\Body\Name::isAliased($systemId, $bodyName);
 
-                    if(substr(strtolower($bodyName), 0, strlen($systemName)) == strtolower($systemName))
+                    if($isAliased === false)
                     {
-                        $bodyName = trim(str_ireplace($systemName, '', $bodyName));
-                    }
-                }
+                        $currentSystem  = \Component\System::getInstance($systemId);
+                        $systemName     = $currentSystem->getName();
 
-                // Use cache to fetch all bodies in the current system
-                $systemBodies = $systemsBodiesModel->getByRefSystem($systemId);
-
-                if(!is_null($systemBodies) && count($systemBodies) > 0)
-                {
-                    foreach($systemBodies AS $currentSystemBody)
-                    {
-                        // Complete name format or just body part
-                        if(strtolower($currentSystemBody['name']) == strtolower($bodyName) || strtolower($currentSystemBody['name']) == strtolower($json['BodyName']))
+                        if(substr(strtolower($bodyName), 0, strlen($systemName)) == strtolower($systemName))
                         {
-                            $currentBody    = $currentSystemBody['id'];
-                            break;
+                            $bodyName = trim(str_ireplace($systemName, '', $bodyName));
                         }
                     }
-                }
 
-                if(!is_null($currentBody))
-                {
-                    // The message is recent and EDDN already have the body, most likely we can untick the wait for EDDN option!
-                    // This is done to prevent having too much bodies waiting in our temp table...
-                    //$referenceTime = strtotime('30 MINUTE AGO');
-                    //if(static::$user->waitScanBodyFromEDDN() === true && strtotime($json['timestamp']) > $referenceTime)
-                    //{
-                        // Get body and check againts last update date
-                        //$usersModel = new \Models_Users;
-                        //$usersModel->updateById(static::$user->getId(), ['waitScanBodyFromEDDN' => 0]);
-                        //unset($usersModel);
-                    //}
-                }
-                elseif(in_array(static::$softwareId, [1, 1209, 1211]) || static::$user->waitScanBodyFromEDDN() === false || strtotime($json['timestamp']) < strtotime('1 MONTH AGO'))
-                {
-                    $return = null;
+                    // Use cache to fetch all bodies in the current system
+                    $systemBodies = $systemsBodiesModel->getByRefSystem($systemId);
 
-                    // Reimport EDDN message
-                    try
+                    if(!is_null($systemBodies) && count($systemBodies) > 0)
                     {
-                        $return = \EDDN\System\Body::handle($systemId, $json, false);
-
-                        // If false, something went wrong on the scan name not belonging to it's system
-                        if($return === false)
+                        foreach($systemBodies AS $currentSystemBody)
                         {
-                            // Just delete it... Software should pay better attention to follow the right system!
-                            return static::$return;
-                        }
-                    }
-                    catch(\Zend_Db_Exception $e)
-                    {
-                        // Based on unique index, the body was already saved.
-                        if(strpos($e->getMessage(), '1062 Duplicate') !== false)
-                        {
-
-                        }
-                        else
-                        {
-                            static::$return['msgnum']   = 500;
-                            static::$return['msg']      = 'Exception: ' . $e->getMessage();
-
-                            $registry = \Zend_Registry::getInstance();
-
-                            if($registry->offsetExists('sentryClient'))
+                            // Complete name format or just body part
+                            if(strtolower($currentSystemBody['name']) == strtolower($bodyName) || strtolower($currentSystemBody['name']) == strtolower($json['BodyName']))
                             {
-                                $sentryClient = $registry->offsetGet('sentryClient');
-                                $sentryClient->captureException($e);
+                                $currentBody    = $currentSystemBody['id'];
+                                break;
                             }
                         }
                     }
 
-                    if(!is_null($return) && $return !== false)
+                    if(!is_null($currentBody))
                     {
-                        $currentBody = $return;
+                        // The message is recent and EDDN already have the body, most likely we can untick the wait for EDDN option!
+                        // This is done to prevent having too much bodies waiting in our temp table...
+                        //$referenceTime = strtotime('30 MINUTE AGO');
+                        //if(static::$user->waitScanBodyFromEDDN() === true && strtotime($json['timestamp']) > $referenceTime)
+                        //{
+                            // Get body and check againts last update date
+                            //$usersModel = new \Models_Users;
+                            //$usersModel->updateById(static::$user->getId(), ['waitScanBodyFromEDDN' => 0]);
+                            //unset($usersModel);
+                        //}
                     }
-                    else
+                    elseif(in_array(static::$softwareId, [1, 1209, 1211]) || static::$user->waitScanBodyFromEDDN() === false || strtotime($json['timestamp']) < strtotime('1 MONTH AGO'))
                     {
-                        $currentBody = $systemsBodiesModel->fetchRow(
-                            $systemsBodiesModel->select()
-                                               ->where('refSystem = ?', $systemId)
-                                               ->where('name = ? OR name = "' . $bodyName . '"', $json['BodyName'])
-                        );
+                        $return = null;
 
-                        if(!is_null($currentBody))
+                        // Reimport EDDN message
+                        try
                         {
-                            $currentBody = $currentBody->id;
+                            $return = \EDDN\System\Body::handle($systemId, $json, false);
+
+                            // If false, something went wrong on the scan name not belonging to it's system
+                            if($return === false)
+                            {
+                                // Just delete it... Software should pay better attention to follow the right system!
+                                return static::$return;
+                            }
                         }
-                    }
-                }
-            }
-            else
-            {
-                $systemId    = static::findSystemId($json);
+                        catch(\Zend_Db_Exception $e)
+                        {
+                            // Based on unique index, the body was already saved.
+                            if(strpos($e->getMessage(), '1062 Duplicate') !== false)
+                            {
 
-                // If found, then the system was most likely renamed...
-                if(!is_null($systemId))
-                {
-                    $currentSystem = \Component\System::getInstance($systemId);
+                            }
+                            else
+                            {
+                                static::$return['msgnum']   = 500;
+                                static::$return['msg']      = 'Exception: ' . $e->getMessage();
 
-                    if(array_key_exists('_systemName', $json) && !empty($json['_systemName']) && $currentSystem->getName() != $json['_systemName'])
-                    {
-                        // Just delete it... It will mostly have been merged on rename or scanned again
-                        return static::$return;
-                    }
-                    // At some point if we don't have a proper system, just delete!
-                    elseif(strtotime($json['timestamp']) < strtotime('3 MONTH AGO'))
-                    {
-                        return static::$return;
+                                if(defined('APPLICATION_SENTRY') && APPLICATION_SENTRY === true)
+                                {
+                                    \Sentry\captureException($e);
+                                }
+                            }
+                        }
+
+                        if(!is_null($return) && $return !== false)
+                        {
+                            $currentBody = $return;
+                        }
+                        else
+                        {
+                            $currentBody = $systemsBodiesModel->fetchRow(
+                                $systemsBodiesModel->select()
+                                                   ->where('refSystem = ?', $systemId)
+                                                   ->where('name = ? OR name = "' . $bodyName . '"', $json['BodyName'])
+                            );
+
+                            if(!is_null($currentBody))
+                            {
+                                $currentBody = $currentBody->id;
+                            }
+                        }
                     }
                 }
                 else
                 {
-                    // Some events only contains BodyName and StarType, avoid empty events by checking the distance which is mandatory
-                    if(!array_key_exists('DistanceFromArrivalLS', $json) OR !array_key_exists('_systemName', $json) OR (array_key_exists('_systemName', $json) && empty($json['_systemName'])))
+                    $systemId    = static::findSystemId($json);
+
+                    // If found, then the system was most likely renamed...
+                    if(!is_null($systemId))
                     {
-                        // Just delete it...
-                        return static::$return;
+                        $currentSystem = \Component\System::getInstance($systemId);
+
+                        if(array_key_exists('_systemName', $json) && !empty($json['_systemName']) && $currentSystem->getName() != $json['_systemName'])
+                        {
+                            // Just delete it... It will mostly have been merged on rename or scanned again
+                            return static::$return;
+                        }
+                        // At some point if we don't have a proper system, just delete!
+                        elseif(strtotime($json['timestamp']) < strtotime('3 MONTH AGO'))
+                        {
+                            return static::$return;
+                        }
                     }
-                    // At some point if we don't have a proper system, just delete!
-                    elseif(strtotime($json['timestamp']) < strtotime('1 MONTH AGO'))
+                    else
                     {
-                        return static::$return;
+                        // Some events only contains BodyName and StarType, avoid empty events by checking the distance which is mandatory
+                        if(!array_key_exists('DistanceFromArrivalLS', $json) OR !array_key_exists('_systemName', $json) OR (array_key_exists('_systemName', $json) && empty($json['_systemName'])))
+                        {
+                            // Just delete it...
+                            return static::$return;
+                        }
+                        // At some point if we don't have a proper system, just delete!
+                        elseif(strtotime($json['timestamp']) < strtotime('1 MONTH AGO'))
+                        {
+                            return static::$return;
+                        }
                     }
                 }
             }
-        }
 
-        // Convert the json message to a smaller subset to save in case we did not process the body yet
-        if(is_null($currentBody))
-        {
-            static::$return['msgnum']   = 402;
-            static::$return['msg']      = 'Item unknown';
-
-            // Save in temp table for reparsing
-            $json['isError']            = 1;
-            \Journal\Event::run($json);
-
-            return static::$return;
-        }
-
-        // Insert user scan
-        $systemsBodiesUsersModel = new \Models_Systems_Bodies_Users;
-
-        try
-        {
-            $insert                 = array();
-            $insert['refBody']      = $currentBody;
-            $insert['refUser']      = static::$user->getId();
-            $insert['dateScanned']  = $json['timestamp'];
-
-            $systemsBodiesUsersModel->insert($insert);
-
-            unset($insert);
-        }
-        catch(\Zend_Db_Exception $e)
-        {
-            // Based on unique index, the body was already saved.
-            if(strpos($e->getMessage(), '1062 Duplicate') !== false)
+            // Convert the json message to a smaller subset to save in case we did not process the body yet
+            if(is_null($currentBody))
             {
+                static::$return['msgnum']   = 402;
+                static::$return['msg']      = 'Item unknown';
 
-            }
-            else
-            {
-                $registry = \Zend_Registry::getInstance();
+                // Save in temp table for reparsing
+                $json['isError']            = 1;
+                \Journal\Event::run($json);
 
-                if($registry->offsetExists('sentryClient'))
-                {
-                    $sentryClient = $registry->offsetGet('sentryClient');
-                    $sentryClient->captureException($e);
-                }
-            }
-        }
-
-        // Trigger reset for Elastic search
-        $systemsBodiesModel->updateById($currentBody, ['inElastic' => 0]);
-
-        // Reset date scan stats for each users
-        $usersExplorationValuesModel            = new \Models_Users_Exploration_Values;
-        $usersExplorationValuesModel->deleteByRefUserAndRefDate(
-            static::$user->getId(),
-            date('Y-m-d', strtotime($json['timestamp']))
-        );
-
-        $usersScans                             = $systemsBodiesUsersModel->getByRefBody($currentBody);
-        foreach($usersScans AS $key => $userScan)
-        {
-            if($key >= 2)
-            {
-                break;
+                return static::$return;
             }
 
-            if(strtotime($userScan['dateScanned']) >= strtotime($json['timestamp']))
+            // Insert user scan
+            $systemsBodiesUsersModel = new \Models_Systems_Bodies_Users;
+
+            try
             {
-                $usersExplorationValuesModel->deleteByRefUserAndRefDate(
-                    $userScan['refUser'],
-                    date('Y-m-d', strtotime($userScan['dateScanned']))
-                );
+                $insert                 = array();
+                $insert['refBody']      = $currentBody;
+                $insert['refUser']      = static::$user->getId();
+                $insert['dateScanned']  = $json['timestamp'];
+
+                $systemsBodiesUsersModel->insert($insert);
+
+                unset($insert);
             }
-        }
-
-        unset($usersExplorationValuesModel);
-
-        //BADGES
-        $firstScannedBy = $systemsBodiesUsersModel->getFirstScannedByRefBody($currentBody);
-        if(!is_null($firstScannedBy) && $firstScannedBy['refUser'] == static::$user->getId())
-        {
-            $currentBodyData = $systemsBodiesModel->getById($currentBody);
-
-            if(array_key_exists('group', $currentBodyData) && $currentBodyData['group'] == 1)
+            catch(\Zend_Db_Exception $e)
             {
-                if(array_key_exists('type', $currentBodyData) && \Alias\Body\Star\Type::isScoopable($currentBodyData['type']) === true)
+                // Based on unique index, the body was already saved.
+                if(strpos($e->getMessage(), '1062 Duplicate') !== false)
                 {
-                    static::$user->giveBadge(
-                        5010,
-                        ['bodyId' => $currentBody]
-                    );
+
+                }
+                else
+                {
+                    if(defined('APPLICATION_SENTRY') && APPLICATION_SENTRY === true)
+                    {
+                        \Sentry\captureException($e);
+                    }
+                }
+            }
+
+            // Trigger reset for Elastic search
+            $systemsBodiesModel->updateById($currentBody, ['inElastic' => 0]);
+
+            // Reset date scan stats for each users
+            $usersExplorationValuesModel            = new \Models_Users_Exploration_Values;
+            $usersExplorationValuesModel->deleteByRefUserAndRefDate(
+                static::$user->getId(),
+                date('Y-m-d', strtotime($json['timestamp']))
+            );
+
+            $usersScans                             = $systemsBodiesUsersModel->getByRefBody($currentBody);
+            foreach($usersScans AS $key => $userScan)
+            {
+                if($key >= 2)
+                {
+                    break;
                 }
 
-                if(array_key_exists('type', $currentBodyData) && in_array($currentBodyData['type'], [21, 22, 23, 24, 25]))
+                if(strtotime($userScan['dateScanned']) >= strtotime($json['timestamp']))
                 {
-                    static::$user->giveBadge(
-                        5020,
-                        ['bodyId' => $currentBody]
-                    );
-                }
-
-                if(array_key_exists('type', $currentBodyData) && $currentBodyData['type'] == 91)
-                {
-                    static::$user->giveBadge(
-                        5060,
-                        ['bodyId' => $currentBody]
-                    );
-                }
-
-                if(array_key_exists('type', $currentBodyData) && $currentBodyData['type'] == 92)
-                {
-                    static::$user->giveBadge(
-                        5050,
-                        ['bodyId' => $currentBody]
+                    $usersExplorationValuesModel->deleteByRefUserAndRefDate(
+                        $userScan['refUser'],
+                        date('Y-m-d', strtotime($userScan['dateScanned']))
                     );
                 }
             }
 
-            if(array_key_exists('group', $currentBodyData) && $currentBodyData['group'] == 2)
-            {
-                static::$user->giveBadge(
-                    5000,
-                    ['bodyId' => $currentBody]
-                );
+            unset($usersExplorationValuesModel);
 
-                if(array_key_exists('type', $currentBodyData) && $currentBodyData['type'] == 31)
+            //BADGES
+            $firstScannedBy = $systemsBodiesUsersModel->getFirstScannedByRefBody($currentBody);
+            if(!is_null($firstScannedBy) && $firstScannedBy['refUser'] == static::$user->getId())
+            {
+                $currentBodyData = $systemsBodiesModel->getById($currentBody);
+
+                if(array_key_exists('group', $currentBodyData) && $currentBodyData['group'] == 1)
+                {
+                    if(array_key_exists('type', $currentBodyData) && \Alias\Body\Star\Type::isScoopable($currentBodyData['type']) === true)
+                    {
+                        static::$user->giveBadge(
+                            5010,
+                            ['bodyId' => $currentBody]
+                        );
+                    }
+
+                    if(array_key_exists('type', $currentBodyData) && in_array($currentBodyData['type'], [21, 22, 23, 24, 25]))
+                    {
+                        static::$user->giveBadge(
+                            5020,
+                            ['bodyId' => $currentBody]
+                        );
+                    }
+
+                    if(array_key_exists('type', $currentBodyData) && $currentBodyData['type'] == 91)
+                    {
+                        static::$user->giveBadge(
+                            5060,
+                            ['bodyId' => $currentBody]
+                        );
+                    }
+
+                    if(array_key_exists('type', $currentBodyData) && $currentBodyData['type'] == 92)
+                    {
+                        static::$user->giveBadge(
+                            5050,
+                            ['bodyId' => $currentBody]
+                        );
+                    }
+                }
+
+                if(array_key_exists('group', $currentBodyData) && $currentBodyData['group'] == 2)
                 {
                     static::$user->giveBadge(
-                        5100,
+                        5000,
                         ['bodyId' => $currentBody]
                     );
+
+                    if(array_key_exists('type', $currentBodyData) && $currentBodyData['type'] == 31)
+                    {
+                        static::$user->giveBadge(
+                            5100,
+                            ['bodyId' => $currentBody]
+                        );
+                    }
+                    if(array_key_exists('type', $currentBodyData) && $currentBodyData['type'] == 41)
+                    {
+                        static::$user->giveBadge(
+                            5110,
+                            ['bodyId' => $currentBody]
+                        );
+                    }
+                    if(array_key_exists('type', $currentBodyData) && $currentBodyData['type'] == 51)
+                    {
+                        static::$user->giveBadge(
+                            5120,
+                            ['bodyId' => $currentBody]
+                        );
+                    }
                 }
-                if(array_key_exists('type', $currentBodyData) && $currentBodyData['type'] == 41)
-                {
-                    static::$user->giveBadge(
-                        5110,
-                        ['bodyId' => $currentBody]
-                    );
-                }
-                if(array_key_exists('type', $currentBodyData) && $currentBodyData['type'] == 51)
-                {
-                    static::$user->giveBadge(
-                        5120,
-                        ['bodyId' => $currentBody]
-                    );
-                }
+
+                unset($currentBodyData);
             }
 
-            unset($currentBodyData);
+            unset($systemsBodiesModel, $systemsBodiesUsersModel);
         }
-
-        unset($systemsBodiesModel, $systemsBodiesUsersModel);
 
         return static::$return;
     }

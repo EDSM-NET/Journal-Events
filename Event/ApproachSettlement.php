@@ -37,6 +37,15 @@ class ApproachSettlement extends Event
                     \Journal\Event::run($json);
                 }
             }
+            else
+            {
+                static::$return['msgnum']   = 402;
+                static::$return['msg']      = 'Item unknown';
+
+                // Save undockable settlements...
+                $json['isError']            = 1;
+                \Journal\Event::run($json);
+            }
         }
 
         return static::$return;

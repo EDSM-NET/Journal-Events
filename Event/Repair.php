@@ -37,22 +37,50 @@ class Repair extends Event
     {
         $details        = array();
 
-        if(in_array(strtolower($json['Item']), ['all', 'wear', 'hull', 'paint']))
+        if(array_key_exists('Item', $json))
         {
-            $details['type'] = strtolower($json['Item']);
-        }
-        else
-        {
-            $outfittingType     = \Alias\Station\Outfitting\Type::getFromFd($json['Item']);
-            $details['type']    = 'module';
-
-            if(!is_null($outfittingType))
+            if(in_array(strtolower($json['Item']), ['all', 'wear', 'hull', 'paint']))
             {
-                $details['item'] = $outfittingType;
+                $details['type'] = strtolower($json['Item']);
             }
-            elseif(!in_array($json['Item'], static::$excludedOutfitting))
+            else
             {
-                \EDSM_Api_Logger_Alias::log('Alias\Station\Outfitting\Type : ' . $json['Item']);
+                $outfittingType     = \Alias\Station\Outfitting\Type::getFromFd($json['Item']);
+                $details['type']    = 'module';
+
+                if(!is_null($outfittingType))
+                {
+                    $details['item'] = $outfittingType;
+                }
+                elseif(!in_array($json['Item'], static::$excludedOutfitting))
+                {
+                    \EDSM_Api_Logger_Alias::log('Alias\Station\Outfitting\Type : ' . $json['Item']);
+                }
+            }
+        }
+        if(array_key_exists('Items', $json))
+        {
+            $details['items'] = [];
+
+            foreach($json['Items'] AS $item)
+            {
+                if(in_array(strtolower($item), ['all', 'wear', 'hull', 'paint']))
+                {
+                    $details['items'][] = strtolower($item);
+                }
+                else
+                {
+                    $outfittingType     = \Alias\Station\Outfitting\Type::getFromFd($item);
+
+                    if(!is_null($outfittingType))
+                    {
+                        $details['items'][] = ['module' => $outfittingType];
+                    }
+                    elseif(!in_array($item, static::$excludedOutfitting))
+                    {
+                        \EDSM_Api_Logger_Alias::log('Alias\Station\Outfitting\Type : ' . $item);
+                    }
+                }
             }
         }
 

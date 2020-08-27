@@ -44,19 +44,16 @@ class FSSAllBodiesFound extends Event
                     // Based on unique index, this entry was already saved.
                     if(strpos($e->getMessage(), '1062 Duplicate') !== false)
                     {
-                        return;
+                        return static::$return;
                     }
                     else
                     {
                         static::$return['msgnum']   = 500;
                         static::$return['msg']      = 'Exception: ' . $e->getMessage();
 
-                        $registry = \Zend_Registry::getInstance();
-
-                        if($registry->offsetExists('sentryClient'))
+                        if(defined('APPLICATION_SENTRY') && APPLICATION_SENTRY === true)
                         {
-                            $sentryClient = $registry->offsetGet('sentryClient');
-                            $sentryClient->captureException($e);
+                            \Sentry\captureException($e);
                         }
                     }
                 }
@@ -77,16 +74,12 @@ class FSSAllBodiesFound extends Event
                     }
                     else
                     {
-                        $registry = \Zend_Registry::getInstance();
-
-                        if($registry->offsetExists('sentryClient'))
+                        if(defined('APPLICATION_SENTRY') && APPLICATION_SENTRY === true)
                         {
-                            $sentryClient = $registry->offsetGet('sentryClient');
-                            $sentryClient->captureMessage(
-                                'Wrong bodyCount',
-                                array('systemId' => $systemId,),
-                                array('extra' => $json,)
-                            );
+                            \Sentry\State\Hub::getCurrent()->configureScope(function (\Sentry\State\Scope $scope) use ($systemId, $json): void {
+                                $scope->setExtra('systemId', $systemId);
+                            });
+                            \Sentry\captureMessage('Wrong bodyCount');
                         }
                     }
                 }
