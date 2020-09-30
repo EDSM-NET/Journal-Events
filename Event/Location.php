@@ -21,6 +21,9 @@ class Location extends Event
 
     public static function run($json)
     {
+        $systemId       = null;
+        $currentShipId  = null;
+
         if(array_key_exists('Docked', $json) && $json['Docked'] === true)
         {
             $stationId = static::findStationId($json);
@@ -28,8 +31,48 @@ class Location extends Event
             if(!is_null($stationId))
             {
                 $station        = \EDSM_System_Station::getInstance($stationId);
+
+                if(in_array($station->getType(), [12, 21, 31]))
+                {
+                    if(strtotime($station->getUpdateTime()) < strtotime($json['timestamp']))
+                    {
+                        $update         = array();
+                        $jsonSystemId   = static::findSystemId($json);
+                        $storedSystem   = $station->getSystem();
+                        $storedSystemId = null;
+
+                        if(!is_null($storedSystem))
+                        {
+                            $storedSystemId = $storedSystem->getId();
+                        }
+
+                        // Save megaship systems history if moved
+                        if(!is_null($jsonSystemId) && $storedSystemId !== $jsonSystemId)
+                        {
+                            // Add old system to history
+                            $systemsHistory             = $station->getSystemsHistory();
+                            $systemsHistory[time()]     = $storedSystemId;
+                            $systemsHistory             = array_slice($systemsHistory, -100);
+
+                            $update['refSystem']        = $jsonSystemId;
+                            $update['systemsHistory']   = \Zend_Json::encode($systemsHistory);
+                            $update['refBody']          = new \Zend_Db_Expr('NULL');
+                        }
+
+                        if(count($update) > 0)
+                        {
+                            // Update system/name
+                            $stationsModel = new \Models_Stations;
+                            $stationsModel->updateById($stationId, $update);
+                            $station = \EDSM_System_Station::getInstance($stationId);
+                        }
+                    }
+                }
+
                 $system         = $station->getSystem();
                 $currentShipId  = static::findShipId($json);
+
+                $systemId       = (int) $system->getId();
 
                 // Update ship parking
                 if(!is_null($currentShipId))
@@ -46,7 +89,7 @@ class Location extends Event
 
                         if(!array_key_exists('locationUpdated', $currentShip) || is_null($currentShip['locationUpdated']) || strtotime($currentShip['locationUpdated']) < strtotime($json['timestamp']))
                         {
-                            $update['refSystem']        = (int) $system->getId();
+                            $update['refSystem']        = $systemId;
                             $update['refStation']       = (int) $station->getId();
                             $update['locationUpdated']  = $json['timestamp'];
                         }
@@ -61,8 +104,6 @@ class Location extends Event
 
                     unset($usersShipsModel);
                 }
-
-                unset($currentShipId);
             }
 
             // Give badge
@@ -75,7 +116,10 @@ class Location extends Event
         }
 
         // Insert a fake FSDJump in case of death or game failure.
-        $systemId = static::findSystemId($json);
+        if(is_null($systemId))
+        {
+            $systemId = static::findSystemId($json);
+        }
 
         if(!is_null($systemId))
         {
@@ -93,6 +137,7 @@ class Location extends Event
                 $insert                 = array();
                 $insert['user']         = static::$user->getId();
                 $insert['system']       = $systemId;
+                $insert['refSoftware']  = static::$softwareId;
                 $insert['dateVisited']  = $json['timestamp'];
 
                 $systemsLogsModel->insert($insert);

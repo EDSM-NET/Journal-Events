@@ -22,6 +22,45 @@ class Docked extends Event
 
         if(!is_null($stationId))
         {
+            $station        = \EDSM_System_Station::getInstance($stationId);
+
+            if(in_array($station->getType(), [12, 21, 31]))
+            {
+                if(strtotime($station->getUpdateTime()) < strtotime($json['timestamp']))
+                {
+                    $update         = array();
+                    $jsonSystemId   = static::findSystemId($json);
+                    $storedSystem   = $station->getSystem();
+                    $storedSystemId = null;
+
+                    if(!is_null($storedSystem))
+                    {
+                        $storedSystemId = $storedSystem->getId();
+                    }
+
+                    // Save megaship systems history if moved
+                    if(!is_null($jsonSystemId) && $storedSystemId !== $jsonSystemId)
+                    {
+                        // Add old system to history
+                        $systemsHistory             = $station->getSystemsHistory();
+                        $systemsHistory[time()]     = $storedSystemId;
+                        $systemsHistory             = array_slice($systemsHistory, -100);
+
+                        $update['refSystem']        = $jsonSystemId;
+                        $update['systemsHistory']   = \Zend_Json::encode($systemsHistory);
+                        $update['refBody']          = new \Zend_Db_Expr('NULL');
+                    }
+
+                    if(count($update) > 0)
+                    {
+                        // Update system/name
+                        $stationsModel = new \Models_Stations;
+                        $stationsModel->updateById($stationId, $update);
+                        $station = \EDSM_System_Station::getInstance($stationId);
+                    }
+                }
+            }
+            
             // Update ship parking
             $currentShipId = static::findShipId($json);
 
