@@ -259,16 +259,19 @@ class Event
     /**
      * EVENTS DETAILS
      */
-    protected static function findSystemId($json, $preventRenamedSystems = false)
+    protected static function findSystemId($json, $preventRenamedSystems = false, $insertSystemIfNeeded = false)
     {
+        $systemsModel       = new \Models_Systems;
+
         $systemName         = null;
+        $systemAddress      = null;
         $systemCoordinates  = null;
 
         // If event contains SystemAddress
         if(array_key_exists('SystemAddress', $json))
         {
-            $systemsModel   = new \Models_Systems;
             $system         = $systemsModel->getById64($json['SystemAddress']);
+            $systemAddress  = $json['SystemAddress'];
 
             if(!is_null($system))
             {
@@ -279,7 +282,6 @@ class Event
         // If transient state, take the transient state
         if(array_key_exists('_systemAddress', $json) && !is_null($json['_systemAddress']) && !empty($json['_systemAddress']))
         {
-            $systemsModel   = new \Models_Systems;
             $system         = $systemsModel->getById64($json['_systemAddress']);
 
             if(!is_null($system))
@@ -341,19 +343,58 @@ class Event
             }
 
             $systemName     = trim($systemName);
-
-            $systemsModel   = new \Models_Systems;
             $system         = $systemsModel->getByName($systemName);
 
             // System creation
-            if(is_null($system))
+            if(is_null($system) && !is_null($systemName))
             {
                 $insertSystem           = array();
                 $insertSystem['name']   = $systemName;
 
+                if(!is_null($systemAddress))
+                {
+                    $insertSystem['id64']   = $systemAddress;
+                }
                 if(!is_null($systemCoordinates))
                 {
                     $insertSystem = array_merge($insertSystem, $systemCoordinates);
+                }
+
+                if($insertSystemIfNeeded === true)
+                {
+                    try
+                    {
+                        $systemId = $systemsModel->insert($insertSystem);
+                    }
+                    catch(\Zend_Db_Exception $e)
+                    {
+                        if(strpos($e->getMessage(), '1062 Duplicate') !== false) // Can happen when the same system is submitted twice during the process
+                        {
+                            if(!is_null($systemAddress))
+                            {
+                                $system = $systemsModel->getById64($json['SystemAddress']);
+
+                                if(!is_null($system))
+                                {
+                                    return $system['id'];
+                                }
+                            }
+                            else
+                            {
+                                $system = $systemsModel->getByName($systemName);
+
+                                if(!is_null($system))
+                                {
+                                    return $system['id'];
+                                }
+                            }
+                        }
+                    }
+
+                    if(!is_null($systemId))
+                    {
+                        return $systemId;
+                    }
                 }
             }
 
@@ -399,7 +440,6 @@ class Event
                                 {
                                     if(array_key_exists('SystemAddress', $json) && is_null($duplicateSystem->getId64()))
                                     {
-                                        $systemsModel   = new \Models_Systems;
                                         $systemsModel->updateById(
                                             $duplicateSystem->getId(),
                                             [
@@ -418,7 +458,6 @@ class Event
                         {
                             if(array_key_exists('SystemAddress', $json) && is_null($currentSystem->getId64()))
                             {
-                                $systemsModel   = new \Models_Systems;
                                 $systemsModel->updateById(
                                     $currentSystem->getId(),
                                     [
@@ -435,7 +474,6 @@ class Event
                 {
                     if(array_key_exists('SystemAddress', $json) && is_null($currentSystem->getId64()))
                     {
-                        $systemsModel   = new \Models_Systems;
                         $systemsModel->updateById(
                             $currentSystem->getId(),
                             [
