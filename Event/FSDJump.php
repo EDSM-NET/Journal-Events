@@ -426,9 +426,6 @@ class FSDJump extends Event
                             $systemCoordinates
                         )
                     );
-
-                    $systemsFeaturedModel = new \Models_Systems_Featured;
-                    $systemsFeaturedModel->deleteByRefSystem($currentSystem->getId());
                 }
 
                 // Store temporary coordinates

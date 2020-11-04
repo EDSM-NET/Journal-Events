@@ -244,72 +244,78 @@ class Scan extends Event
 
             //BADGES
             $firstScannedBy = $systemsBodiesUsersModel->getFirstScannedByRefBody($currentBody);
-            if(!is_null($firstScannedBy) && $firstScannedBy['refUser'] == static::$user->getId())
+            if(!is_null($firstScannedBy))
             {
                 $currentBodyData = $systemsBodiesModel->getById($currentBody);
 
-                if(array_key_exists('group', $currentBodyData) && $currentBodyData['group'] == 1)
+                foreach($firstScannedBy AS $scannedBy)
                 {
-                    if(array_key_exists('type', $currentBodyData) && \Alias\Body\Star\Type::isScoopable($currentBodyData['type']) === true)
+                    if($scannedBy['refUser'] == static::$user->getId())
                     {
-                        static::$user->giveBadge(
-                            5010,
-                            ['bodyId' => $currentBody]
-                        );
-                    }
+                        if(array_key_exists('group', $currentBodyData) && $currentBodyData['group'] == 1)
+                        {
+                            if(array_key_exists('type', $currentBodyData) && \Alias\Body\Star\Type::isScoopable($currentBodyData['type']) === true)
+                            {
+                                static::$user->giveBadge(
+                                    5010,
+                                    ['bodyId' => $currentBody]
+                                );
+                            }
 
-                    if(array_key_exists('type', $currentBodyData) && in_array($currentBodyData['type'], [21, 22, 23, 24, 25]))
-                    {
-                        static::$user->giveBadge(
-                            5020,
-                            ['bodyId' => $currentBody]
-                        );
-                    }
+                            if(array_key_exists('type', $currentBodyData) && in_array($currentBodyData['type'], [21, 22, 23, 24, 25]))
+                            {
+                                static::$user->giveBadge(
+                                    5020,
+                                    ['bodyId' => $currentBody]
+                                );
+                            }
 
-                    if(array_key_exists('type', $currentBodyData) && $currentBodyData['type'] == 91)
-                    {
-                        static::$user->giveBadge(
-                            5060,
-                            ['bodyId' => $currentBody]
-                        );
-                    }
+                            if(array_key_exists('type', $currentBodyData) && $currentBodyData['type'] == 91)
+                            {
+                                static::$user->giveBadge(
+                                    5060,
+                                    ['bodyId' => $currentBody]
+                                );
+                            }
 
-                    if(array_key_exists('type', $currentBodyData) && $currentBodyData['type'] == 92)
-                    {
-                        static::$user->giveBadge(
-                            5050,
-                            ['bodyId' => $currentBody]
-                        );
-                    }
-                }
+                            if(array_key_exists('type', $currentBodyData) && $currentBodyData['type'] == 92)
+                            {
+                                static::$user->giveBadge(
+                                    5050,
+                                    ['bodyId' => $currentBody]
+                                );
+                            }
+                        }
 
-                if(array_key_exists('group', $currentBodyData) && $currentBodyData['group'] == 2)
-                {
-                    static::$user->giveBadge(
-                        5000,
-                        ['bodyId' => $currentBody]
-                    );
+                        if(array_key_exists('group', $currentBodyData) && $currentBodyData['group'] == 2)
+                        {
+                            static::$user->giveBadge(
+                                5000,
+                                ['bodyId' => $currentBody]
+                            );
 
-                    if(array_key_exists('type', $currentBodyData) && $currentBodyData['type'] == 31)
-                    {
-                        static::$user->giveBadge(
-                            5100,
-                            ['bodyId' => $currentBody]
-                        );
-                    }
-                    if(array_key_exists('type', $currentBodyData) && $currentBodyData['type'] == 41)
-                    {
-                        static::$user->giveBadge(
-                            5110,
-                            ['bodyId' => $currentBody]
-                        );
-                    }
-                    if(array_key_exists('type', $currentBodyData) && $currentBodyData['type'] == 51)
-                    {
-                        static::$user->giveBadge(
-                            5120,
-                            ['bodyId' => $currentBody]
-                        );
+                            if(array_key_exists('type', $currentBodyData) && $currentBodyData['type'] == 31)
+                            {
+                                static::$user->giveBadge(
+                                    5100,
+                                    ['bodyId' => $currentBody]
+                                );
+                            }
+                            if(array_key_exists('type', $currentBodyData) && $currentBodyData['type'] == 41)
+                            {
+                                static::$user->giveBadge(
+                                    5110,
+                                    ['bodyId' => $currentBody]
+                                );
+                            }
+                            if(array_key_exists('type', $currentBodyData) && $currentBodyData['type'] == 51)
+                            {
+                                static::$user->giveBadge(
+                                    5120,
+                                    ['bodyId' => $currentBody]
+                                );
+                            }
+                        }
                     }
                 }
 

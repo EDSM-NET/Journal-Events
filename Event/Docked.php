@@ -29,7 +29,7 @@ class Docked extends Event
                 if(strtotime($station->getUpdateTime()) < strtotime($json['timestamp']))
                 {
                     $update         = array();
-                    $jsonSystemId   = static::findSystemId($json);
+                    $jsonSystemId   = static::findSystemId($json, false, true);
                     $storedSystem   = $station->getSystem();
                     $storedSystemId = null;
 
@@ -60,7 +60,7 @@ class Docked extends Event
                     }
                 }
             }
-            
+
             // Update ship parking
             $currentShipId = static::findShipId($json);
 
@@ -81,7 +81,10 @@ class Docked extends Event
                         $station                    = \EDSM_System_Station::getInstance($stationId);
                         $system                     = $station->getSystem();
 
-                        $update['refSystem']        = (int) $system->getId();
+                        if(!is_null($system))
+                        {
+                            $update['refSystem']        = (int) $system->getId();
+                        }
                         $update['refStation']       = (int) $station->getId();
                         $update['locationUpdated']  = $json['timestamp'];
                     }

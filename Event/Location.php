@@ -37,7 +37,7 @@ class Location extends Event
                     if(strtotime($station->getUpdateTime()) < strtotime($json['timestamp']))
                     {
                         $update         = array();
-                        $jsonSystemId   = static::findSystemId($json);
+                        $jsonSystemId   = static::findSystemId($json, false, true);
                         $storedSystem   = $station->getSystem();
                         $storedSystemId = null;
 
@@ -118,7 +118,7 @@ class Location extends Event
         // Insert a fake FSDJump in case of death or game failure.
         if(is_null($systemId))
         {
-            $systemId = static::findSystemId($json);
+            $systemId = static::findSystemId($json, false, true);
         }
 
         if(!is_null($systemId))
