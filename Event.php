@@ -131,8 +131,16 @@ class Event
 
                 $insert['message']      = \Zend_Json::encode($json);
 
-                $journalModel = new \Models_Journal;
-                $journalModel->insert($insert);
+                if(in_array($insert['event'], ['Scan', 'SAAScanComplete']))
+                {
+                    $journalScannerModel = new \Models_Journal_Scanner;
+                    $journalScannerModel->insert($insert);
+                }
+                else
+                {
+                    $journalModel = new \Models_Journal;
+                    $journalModel->insert($insert);
+                }
             }
             catch(\Zend_Db_Exception $e)
             {

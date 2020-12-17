@@ -27,6 +27,36 @@ class Discard
         'ModuleInfo',
         'Status',
 
+        // Squadron
+        'SquadronCreated',
+        'SquadronStartup',
+        'DisbandedSquadron',
+
+        'InvitedToSquadron',
+        'AppliedToSquadron',
+        'JoinedSquadron',
+        'LeftSquadron',
+
+        'SharedBookmarkToSquadron',
+
+
+        // Fleet Carrier
+        'CarrierStats',
+        'CarrierTradeOrder',
+        'CarrierFinance',
+        'CarrierBankTransfer',
+        'CarrierCrewServices',
+
+        'CarrierJumpRequest',
+        'CarrierJumpCancelled',
+        'CarrierDepositFuel',
+        'CarrierDockingPermission',
+        'CarrierModulePack',
+
+        'CarrierBuy',
+        'CarrierNameChange',
+        'CarrierDecommission',
+
         // Load events
         'Fileheader',
         'Commander',
@@ -50,8 +80,11 @@ class Discard
         'NavBeaconScan',
         'SupercruiseEntry',
         'SupercruiseExit',
+        'NavRoute',
 
         // We might reconsider this, and see if we can do something about crime report?
+        'PVPKill',
+        'CrimeVictim',
         'UnderAttack',
         'ShipTargeted',
         'Scanned',
@@ -80,6 +113,7 @@ class Discard
         'AfmuRepairs',
         'CockpitBreached',
         'ReservoirReplenished',
+        'CargoTransfer', //TODO: Synched in Cargo?!
 
         'ApproachBody',
         'LeaveBody',
