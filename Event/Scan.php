@@ -214,7 +214,8 @@ class Scan extends Event
             }
 
             // Trigger reset for Elastic search
-            $systemsBodiesModel->updateById($currentBody, ['inElastic' => 0]);
+            $systemsBodiesInElasticModel = new \Models_Systems_Bodies_InElastic;
+            $systemsBodiesInElasticModel->deleteByRefBody($currentBody, ( (array_key_exists('PlanetClass', $json)) ? 2 : 1 ));
 
             // Reset date scan stats for each users
             $usersExplorationValuesModel            = new \Models_Users_Exploration_Values;

@@ -130,7 +130,8 @@ class SAAScanComplete extends Event
         }
 
         // Trigger reset for Elastic search
-        $systemsBodiesModel->updateById($currentBody, ['inElastic' => 0]);
+        $systemsBodiesInElasticModel = new \Models_Systems_Bodies_InElastic;
+        $systemsBodiesInElasticModel->deleteByRefBody($currentBody);
 
         // Reset date scan stats for each users
         $usersExplorationValuesModel            = new \Models_Users_Exploration_Values;
