@@ -837,6 +837,7 @@ class MissionAccepted extends Event
                     {
                         $json['LocalisedName']      = str_replace(' КР., чтобы помочь остановить голод', '', $json['LocalisedName']);
                         $json['LocalisedName']      = str_replace('Пожалуйста, пожертвуйте ', '', $json['LocalisedName']);
+                        $json['LocalisedName']      = str_replace('Пожертвуйте ', '', $json['LocalisedName']);
                         $missionDetails['donation'] = str_replace(chr(194).chr(160), '', $json['LocalisedName']);
 
                         //\Zend_Debug::dump($missionDetails['donation']); exit();
