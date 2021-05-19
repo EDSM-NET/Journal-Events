@@ -39,7 +39,6 @@ class Discard
 
         'SharedBookmarkToSquadron',
 
-
         // Fleet Carrier
         'CarrierStats',
         'CarrierTradeOrder',
@@ -56,6 +55,10 @@ class Discard
         'CarrierBuy',
         'CarrierNameChange',
         'CarrierDecommission',
+
+        // Odyssey
+        'BookDropship',
+        'CancelDropship',
 
         // Load events
         'Fileheader',
