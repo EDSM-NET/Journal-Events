@@ -103,15 +103,20 @@ class Died extends Event
 
                             if(is_null($killerShip))
                             {
-                                static::$return['msgnum']   = 402;
-                                static::$return['msg']      = 'Item unknown';
+                                $killerSuit     = \Alias\Commander\Suit\Type::getFromFd($killer['Ship']);
 
-                                \EDSM_Api_Logger_Alias::log('Alias\Ship\Type : ' . $killer['Ship']);
+                                if(is_null($killerSuit))
+                                {
+                                    static::$return['msgnum']   = 402;
+                                    static::$return['msg']      = 'Item unknown';
 
-                                $json['isError']            = 1;
-                                \Journal\Event::run($json);
+                                    \EDSM_Api_Logger_Alias::log('Alias\Ship|Suit\Type : ' . $killer['Ship']);
 
-                                return static::$return;
+                                    $json['isError']            = 1;
+                                    \Journal\Event::run($json);
+
+                                    return static::$return;
+                                }
                             }
                         }
                     }
@@ -220,7 +225,20 @@ class Died extends Event
                     else
                     {
                         $killerShip         = \Alias\Ship\Type::getFromFd($killer['Ship']);
-                        $temp['ship']       = $killerShip;
+
+                        if(is_null($killerShip))
+                        {
+                            $killerSuit     = \Alias\Commander\Suit\Type::getFromFd($killer['Ship']);
+
+                            if(!is_null($killerSuit))
+                            {
+                                $temp['suit']   = $killerSuit;
+                            }
+                        }
+                        else
+                        {
+                            $temp['ship']       = $killerShip;
+                        }
                     }
                 }
 
