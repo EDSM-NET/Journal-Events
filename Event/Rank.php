@@ -46,14 +46,20 @@ class Rank extends Event
                 $insert['explorer'] = (int) $json['Explore'];
             }
 
-            if(is_null($currentRanks) || (!is_null($currentRanks) && $currentRanks['mercenary'] != $json['Soldier']))
+            if(array_key_exists('Exobiologist', $json))
             {
-                $insert['mercenary'] = (int) $json['Soldier'];
+                if(is_null($currentRanks) || (!is_null($currentRanks) && $currentRanks['mercenary'] != $json['Soldier']))
+                {
+                    $insert['mercenary'] = (int) $json['Soldier'];
+                }
             }
 
-            if(is_null($currentRanks) || (!is_null($currentRanks) && $currentRanks['exobiologist'] != $json['Exobiologist']))
+            if(array_key_exists('Exobiologist', $json))
             {
-                $insert['exobiologist'] = (int) $json['Exobiologist'];
+                if(is_null($currentRanks) || (!is_null($currentRanks) && $currentRanks['exobiologist'] != $json['Exobiologist']))
+                {
+                    $insert['exobiologist'] = (int) $json['Exobiologist'];
+                }
             }
 
             if(is_null($currentRanks) || (!is_null($currentRanks) && $currentRanks['empire'] != $json['Empire']))

@@ -46,14 +46,20 @@ class Progress extends Event
                 $insert['explorerProgress'] = (int) $json['Explore'];
             }
 
-            if(is_null($currentRanks) || (!is_null($currentRanks) && $currentRanks['mercenaryProgress'] != $json['Soldier']))
+            if(array_key_exists('Soldier', $json))
             {
-                $insert['mercenaryProgress'] = (int) $json['Soldier'];
+                if(is_null($currentRanks) || (!is_null($currentRanks) && $currentRanks['mercenaryProgress'] != $json['Soldier']))
+                {
+                    $insert['mercenaryProgress'] = (int) $json['Soldier'];
+                }
             }
 
-            if(is_null($currentRanks) || (!is_null($currentRanks) && $currentRanks['exobiologistProgress'] != $json['Exobiologist']))
+            if(array_key_exists('Exobiologist', $json))
             {
-                $insert['exobiologistProgress'] = (int) $json['Exobiologist'];
+                if(is_null($currentRanks) || (!is_null($currentRanks) && $currentRanks['exobiologistProgress'] != $json['Exobiologist']))
+                {
+                    $insert['exobiologistProgress'] = (int) $json['Exobiologist'];
+                }
             }
 
             if(is_null($currentRanks) || (!is_null($currentRanks) && $currentRanks['empireProgress'] != $json['Empire']))
