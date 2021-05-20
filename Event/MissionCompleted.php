@@ -39,14 +39,15 @@ class MissionCompleted extends Event
 
         if(array_key_exists('Commodity', $json))
         {
-            $currentItemId      = \Alias\Station\Commodity\Type::getFromFd($json['Commodity']);
+            $currentItemId          = \Alias\Station\Commodity\Type::getFromFd($json['Commodity']);
+            $currentMicroResourceId = \Alias\Commander\MicroResource\Type::getFromFd($json['Commodity']);
 
-            if(is_null($currentItemId))
+            if(is_null($currentItemId) && is_null($currentMicroResourceId))
             {
                 static::$return['msgnum']   = 402;
                 static::$return['msg']      = 'Item unknown';
 
-                \EDSM_Api_Logger_Alias::log('\Alias\Station\Commodity\Type: ' . $json['Commodity']);
+                \EDSM_Api_Logger_Alias::log('\Alias\Commodity|MicroResource\Type: ' . $json['Commodity']);
 
                 // Save in temp table for reparsing
                 $json['isError']            = 1;
@@ -133,15 +134,16 @@ class MissionCompleted extends Event
                     $materialReward = array('Name' => $key, 'Count' => $materialReward);
                 }
 
-                $currentMaterialId  = \Alias\Commander\Material::getFromFd($materialReward['Name']);
-                $currentDataId      = \Alias\Commander\Data::getFromFd($materialReward['Name']);
+                $currentMaterialId      = \Alias\Commander\Material::getFromFd($materialReward['Name']);
+                $currentDataId          = \Alias\Commander\Data::getFromFd($materialReward['Name']);
+                $currentMicroResourceId = \Alias\Commander\MicroResource\Type::getFromFd($materialReward['Name']);
 
-                if(is_null($currentMaterialId) && is_null($currentDataId))
+                if(is_null($currentMaterialId) && is_null($currentDataId) && is_null($currentMicroResourceId))
                 {
                     static::$return['msgnum']   = 402;
                     static::$return['msg']      = 'Item unknown';
 
-                    \EDSM_Api_Logger_Alias::log($aliasClass . ': ' . $materialReward['Name']);
+                    \EDSM_Api_Logger_Alias::log('\Alias\Commander\Material|Data|MicroResource: ' . $materialReward['Name']);
 
                     // Save in temp table for reparsing
                     $json['isError']            = 1;
@@ -331,18 +333,21 @@ class MissionCompleted extends Event
         if(array_key_exists('MaterialsReward', $json))
         {
             $aliasClasses   = [
-                'materials'     => 'Alias\Commander\Material',
-                'data'          => 'Alias\Commander\Data',
+                'materials'         => 'Alias\Commander\Material',
+                'data'              => 'Alias\Commander\Data',
+                'microResources'    => 'Alias\Commander\MicroResource\Type',
             ];
 
             $databaseModels = [
-                'materials'     => new \Models_Users_Materials,
-                'data'          => new \Models_Users_Data,
+                'materials'         => new \Models_Users_Materials,
+                'data'              => new \Models_Users_Data,
+                'microResources'    => new \Models_Users_MicroResources,
             ];
 
             $currentItems   = [
-                'materials'     => $databaseModels['materials']->getByRefUser(static::$user->getId()),
-                'data'          => $databaseModels['data']->getByRefUser(static::$user->getId()),
+                'materials'         => $databaseModels['materials']->getByRefUser(static::$user->getId()),
+                'data'              => $databaseModels['data']->getByRefUser(static::$user->getId()),
+                'microResources'    => $databaseModels['microResources']->getByRefUser(static::$user->getId()),
             ];
 
             foreach($json['MaterialsReward'] AS $key => $materialReward)
@@ -423,20 +428,42 @@ class MissionCompleted extends Event
         // Remove commodity from cargo hold
         if(array_key_exists('Commodity', $json))
         {
-            $databaseModel  = new \Models_Users_Cargo;
-            $currentItems   = $databaseModel->getByRefUser(static::$user->getId());
+            $databaseModel          = null;
+            $currentCommodityId     = \Alias\Station\Commodity\Type::getFromFd($json['Commodity']);
+            $currentMicroResourceId = \Alias\Commander\MicroResource\Type::getFromFd($json['Commodity']);
+            $currentItem            = null;
 
-            $currentCommodityId = \Alias\Station\Commodity\Type::getFromFd($json['Commodity']);
-            $currentItem        = null;
-
-            if(!is_null($currentItems) && !is_null($currentCommodityId))
+            if(!is_null($currentCommodityId))
             {
-                foreach($currentItems AS $tempItem)
+                $databaseModel  = new \Models_Users_Cargo;
+                $currentItems   = $databaseModel->getByRefUser(static::$user->getId());
+
+                if(!is_null($currentItems))
                 {
-                    if($tempItem['type'] == $currentCommodityId)
+                    foreach($currentItems AS $tempItem)
                     {
-                        $currentItem = $tempItem;
-                        break;
+                        if($tempItem['type'] == $currentCommodityId)
+                        {
+                            $currentItem = $tempItem;
+                            break;
+                        }
+                    }
+                }
+            }
+            elseif(!is_null($currentMicroResourceId))
+            {
+                $databaseModel  = new \Models_Users_MicroResources;
+                $currentItems   = $databaseModel->getByRefUser(static::$user->getId());
+
+                if(!is_null($currentItems))
+                {
+                    foreach($currentItems AS $tempItem)
+                    {
+                        if($tempItem['type'] == $currentMicroResourceId)
+                        {
+                            $currentItem = $tempItem;
+                            break;
+                        }
                     }
                 }
             }

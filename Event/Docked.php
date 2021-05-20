@@ -62,42 +62,45 @@ class Docked extends Event
             }
 
             // Update ship parking
-            $currentShipId = static::findShipId($json);
-
-            if(!is_null($currentShipId))
+            if(!array_key_exists('Taxi', $json) || (array_key_exists('Taxi', $json) && $json['Taxi'] === false))
             {
-                static::updateCurrentGameShipId($currentShipId, $json['timestamp']);
-
-                $usersShipsModel    = new \Models_Users_Ships;
-                $currentShipId      = static::$user->getShipById($currentShipId);
+                $currentShipId = static::findShipId($json);
 
                 if(!is_null($currentShipId))
                 {
-                    $currentShip    = $usersShipsModel->getById($currentShipId);
-                    $update         = array();
+                    static::updateCurrentGameShipId($currentShipId, $json['timestamp']);
 
-                    if(!array_key_exists('locationUpdated', $currentShip) || is_null($currentShip['locationUpdated']) || strtotime($currentShip['locationUpdated']) < strtotime($json['timestamp']))
+                    $usersShipsModel    = new \Models_Users_Ships;
+                    $currentShipId      = static::$user->getShipById($currentShipId);
+
+                    if(!is_null($currentShipId))
                     {
-                        $station                    = \EDSM_System_Station::getInstance($stationId);
-                        $system                     = $station->getSystem();
+                        $currentShip    = $usersShipsModel->getById($currentShipId);
+                        $update         = array();
 
-                        if(!is_null($system))
+                        if(!array_key_exists('locationUpdated', $currentShip) || is_null($currentShip['locationUpdated']) || strtotime($currentShip['locationUpdated']) < strtotime($json['timestamp']))
                         {
-                            $update['refSystem']        = (int) $system->getId();
+                            $station                    = \EDSM_System_Station::getInstance($stationId);
+                            $system                     = $station->getSystem();
+
+                            if(!is_null($system))
+                            {
+                                $update['refSystem']        = (int) $system->getId();
+                            }
+                            $update['refStation']       = (int) $station->getId();
+                            $update['locationUpdated']  = $json['timestamp'];
                         }
-                        $update['refStation']       = (int) $station->getId();
-                        $update['locationUpdated']  = $json['timestamp'];
+
+                        if(count($update) > 0)
+                        {
+                            $usersShipsModel->updateById($currentShipId, $update);
+                        }
+
+                        unset($update);
                     }
 
-                    if(count($update) > 0)
-                    {
-                        $usersShipsModel->updateById($currentShipId, $update);
-                    }
-
-                    unset($update);
+                    unset($usersShipsModel, $currentShipId);
                 }
-
-                unset($usersShipsModel, $currentShipId);
             }
 
             // Update user last docking

@@ -39,14 +39,15 @@ class MissionAccepted extends Event
 
         if(array_key_exists('Commodity', $json))
         {
-            $currentItemId      = \Alias\Station\Commodity\Type::getFromFd($json['Commodity']);
+            $currentItemId          = \Alias\Station\Commodity\Type::getFromFd($json['Commodity']);
+            $currentMicroResourceId = \Alias\Commander\MicroResource\Type::getFromFd($json['Commodity']);
 
-            if(is_null($currentItemId))
+            if(is_null($currentItemId) && is_null($currentMicroResourceId))
             {
                 static::$return['msgnum']   = 402;
                 static::$return['msg']      = 'Item unknown';
 
-                \EDSM_Api_Logger_Alias::log('\Alias\Station\Commodity\Type: ' . $json['Commodity']);
+                \EDSM_Api_Logger_Alias::log('\Alias\Commodity|MicroResource\Type: ' . $json['Commodity']);
 
                 // Save in temp table for reparsing
                 $json['isError']            = 1;
@@ -392,12 +393,27 @@ class MissionAccepted extends Event
 
         if(array_key_exists('Commodity', $json))
         {
-            $details['commodity']           = \Alias\Station\Commodity\Type::getFromFd($json['Commodity']);
-        }
+            $currentItemId          = \Alias\Station\Commodity\Type::getFromFd($json['Commodity']);
+            $currentMicroResourceId = \Alias\Commander\MicroResource\Type::getFromFd($json['Commodity']);
 
-        if(array_key_exists('Count', $json))
-        {
-            $details['commodityCount']      = $json['Count'];
+            if(!is_null($currentItemId))
+            {
+                $details['commodity']               = $currentItemId;
+
+                if(array_key_exists('Count', $json))
+                {
+                    $details['commodityCount']      = $json['Count'];
+                }
+            }
+            elseif(!is_null($currentMicroResourceId))
+            {
+                $details['microResource']           = $currentMicroResourceId;
+
+                if(array_key_exists('Count', $json))
+                {
+                    $details['microResourceCount']  = $json['Count'];
+                }
+            }
         }
 
         if(array_key_exists('Target', $json))
