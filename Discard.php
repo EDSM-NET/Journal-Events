@@ -60,6 +60,9 @@ class Discard
         'BookDropship',
         'CancelDropship',
 
+        //'Disembark', //TODO: Use for Foot discovery
+        'Embark',
+
         // Load events
         'Fileheader',
         'Commander',

@@ -453,19 +453,22 @@ class FSDJump extends Event
             $insert['refSoftware']  = static::$softwareId;
             $insert['dateVisited']  = $json['timestamp'];
 
-            // Find the current shipID
-            $currentShipId = static::findShipId($json);
-
-            if(!is_null($currentShipId))
+            if(!array_key_exists('Taxi', $json) || (array_key_exists('Taxi', $json) && $json['Taxi'] === false))
             {
-                static::$return['shipId']   = (int) $currentShipId;
-                $insert['refShip']          = (int) $currentShipId;
-            }
+                // Find the current shipID
+                $currentShipId = static::findShipId($json);
 
-            // Do we have the used Fuel?
-            if(array_key_exists('FuelUsed', $json))
-            {
-                $insert['fuelUsed'] = $json['FuelUsed'];
+                if(!is_null($currentShipId))
+                {
+                    static::$return['shipId']   = (int) $currentShipId;
+                    $insert['refShip']          = (int) $currentShipId;
+                }
+
+                // Do we have the used Fuel?
+                if(array_key_exists('FuelUsed', $json))
+                {
+                    $insert['fuelUsed'] = $json['FuelUsed'];
+                }
             }
 
             // Do we have the jump distance?

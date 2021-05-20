@@ -113,7 +113,7 @@ class MissionCompleted extends Event
                     static::$return['msgnum']   = 402;
                     static::$return['msg']      = 'Item unknown';
 
-                    \EDSM_Api_Logger_Alias::log($aliasClass . ': ' . $commodityReward['Name']);
+                    \EDSM_Api_Logger_Alias::log('\Alias\Station\Commodity\Type: ' . $commodityReward['Name']);
 
                     // Save in temp table for reparsing
                     $json['isError']            = 1;
