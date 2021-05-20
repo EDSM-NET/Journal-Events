@@ -470,6 +470,10 @@ class FSDJump extends Event
                     $insert['fuelUsed'] = $json['FuelUsed'];
                 }
             }
+            else
+            {
+                $currentShipId = null;
+            }
 
             // Do we have the jump distance?
             if(array_key_exists('JumpDist', $json))
