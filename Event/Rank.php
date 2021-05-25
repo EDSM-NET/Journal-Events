@@ -46,7 +46,7 @@ class Rank extends Event
                 $insert['explorer'] = (int) $json['Explore'];
             }
 
-            if(array_key_exists('Exobiologist', $json))
+            if(array_key_exists('Soldier', $json))
             {
                 if(is_null($currentRanks) || (!is_null($currentRanks) && $currentRanks['mercenary'] != $json['Soldier']))
                 {
