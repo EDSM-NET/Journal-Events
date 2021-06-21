@@ -27,7 +27,7 @@ class MissionAccepted extends Event
 
             if(array_key_exists('LocalisedName', $json))
             {
-                \EDSM_Api_Logger_Mission::log('Alias\Station\Mission\Type: ' . $json['Name'] . ' / ' . $json['LocalisedName']);
+                \EDSM_Api_Logger_Mission::log('Alias\Station\Mission\Type: ' . $json['Name']);
             }
 
             // Save in temp table for reparsing

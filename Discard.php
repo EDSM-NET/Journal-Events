@@ -60,6 +60,10 @@ class Discard
         'BookDropship',
         'CancelDropship',
 
+        // Odysset - Backed by BackpackChange
+        'CollectItems',
+        'DropItems',
+
         //'Disembark', //TODO: Use for Foot discovery
         'Embark',
 
