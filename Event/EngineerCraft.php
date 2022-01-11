@@ -20,20 +20,42 @@ class EngineerCraft extends Event
     public static function run($json)
     {
         // Check if Engineer is known in EDSM
-        $engineerId        = \Alias\Station\Engineer::getFromFd($json['Engineer']);
-
-        if(is_null($engineerId))
+        $engineerId = null;
+        if(array_key_exists('EngineerID', $json))
         {
-            static::$return['msgnum']   = 402;
-            static::$return['msg']      = 'Item unknown';
+            $engineerId = \Alias\Station\Engineer::getFromFd($json['EngineerID']);
+            
+            if(is_null($engineerId) && $json['EngineerID'] !== 399999)
+            {
+                static::$return['msgnum']   = 402;
+                static::$return['msg']      = 'Item unknown';
 
-            \EDSM_Api_Logger_Alias::log('Alias\Station\Engineer: ' . $json['Engineer']);
+                \EDSM_Api_Logger_Alias::log('Alias\Station\Engineer: ' . $json['EngineerID']);
 
-            // Save in temp table for reparsing
-            $json['isError']            = 1;
-            \Journal\Event::run($json);
+                // Save in temp table for reparsing
+                $json['isError']            = 1;
+                \Journal\Event::run($json);
 
-            return static::$return;
+                return static::$return;
+            }
+        }
+        elseif(array_key_exists('Engineer', $json))
+        {
+            $engineerId = \Alias\Station\Engineer::getFromFd($json['Engineer']);
+            
+            if(is_null($engineerId))
+            {
+                static::$return['msgnum']   = 402;
+                static::$return['msg']      = 'Item unknown';
+
+                \EDSM_Api_Logger_Alias::log('Alias\Station\Engineer: ' . $json['Engineer']);
+
+                // Save in temp table for reparsing
+                $json['isError']            = 1;
+                \Journal\Event::run($json);
+
+                return static::$return;
+            }
         }
 
         // Convert after 3.0
@@ -69,7 +91,7 @@ class EngineerCraft extends Event
             }
         }
 
-        if(array_key_exists('Level', $json))
+        if(array_key_exists('Level', $json) && !is_null($engineerId))
         {
             $usersEngineersModel    = new \Models_Users_Engineers;
             $currentEngineers       = $usersEngineersModel->getByRefUser(static::$user->getId());

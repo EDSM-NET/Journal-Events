@@ -213,6 +213,12 @@ class Died extends Event
                     else
                     {
                         $temp['name']       = $killer['Name'];
+
+                        // Give badge!
+                        if($temp['name'] === 'smorganmoore')
+                        {
+                            static::$user->giveBadge(7465);
+                        }
                     }
                 }
 

@@ -185,7 +185,7 @@ class Loadout extends Event
                                         // Check if Engineer is known in EDSM
                                         $engineerId        = \Alias\Station\Engineer::getFromFd($module['Engineering']['EngineerID']);
 
-                                        if(!is_null($engineerId))
+                                        if(!is_null($engineerId) || $module['Engineering']['EngineerID'] === 300001 || $module['Engineering']['EngineerID'] === 399999)
                                         {
                                             if(!array_key_exists('BlueprintID', $module['Engineering']))
                                             {

@@ -66,20 +66,7 @@ class Scan extends Event
                         }
                     }
 
-                    if(!is_null($currentBody))
-                    {
-                        // The message is recent and EDDN already have the body, most likely we can untick the wait for EDDN option!
-                        // This is done to prevent having too much bodies waiting in our temp table...
-                        //$referenceTime = strtotime('30 MINUTE AGO');
-                        //if(static::$user->waitScanBodyFromEDDN() === true && strtotime($json['timestamp']) > $referenceTime)
-                        //{
-                            // Get body and check againts last update date
-                            //$usersModel = new \Models_Users;
-                            //$usersModel->updateById(static::$user->getId(), ['waitScanBodyFromEDDN' => 0]);
-                            //unset($usersModel);
-                        //}
-                    }
-                    elseif(in_array(static::$softwareId, [1, 1209, 1211]) || static::$user->waitScanBodyFromEDDN() === false || strtotime($json['timestamp']) < strtotime('1 MONTH AGO'))
+                    if(is_null($currentBody))
                     {
                         $return = null;
 
