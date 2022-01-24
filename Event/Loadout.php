@@ -271,7 +271,7 @@ class Loadout extends Event
 
                                                             if(is_null($getOriginalValue))
                                                             {
-                                                                if(strtotime($json['timestamp']) > strtotime('2019-05-02 18:00:00'))
+                                                                if(strtotime($json['timestamp']) > strtotime('1 WEEK AGO')) // Don't flag old values
                                                                 {
                                                                     if(array_key_exists('ValueStr', $moduleModifier) && !array_key_exists('OriginalValue', $moduleModifier))
                                                                     {
@@ -288,7 +288,7 @@ class Loadout extends Event
                                                             {
                                                                 if($getOriginalValue != $moduleModifier['OriginalValue'] && ($insertModule['refOutfitting'] != 4011 && $useClass != 'Alias\Station\Outfitting\Mass'))
                                                                 {
-                                                                    if(strtotime($json['timestamp']) > strtotime('2019-05-02 18:00:00'))
+                                                                    if(strtotime($json['timestamp']) > strtotime('1 WEEK AGO')) // Don't flag old values
                                                                     {
                                                                         \EDSM_Api_Logger_Alias::log('Outfitting OriginalValue wrong: ' . $useClass . '::' . $insertModule['refOutfitting'] . ': ' . $moduleModifier['OriginalValue'] . ' / ' . $module['Item']);
                                                                     }

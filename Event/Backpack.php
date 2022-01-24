@@ -7,7 +7,7 @@
 namespace   Journal\Event;
 use         Journal\Event;
 
-class BackPack extends Event
+class Backpack extends Event
 {
     protected static $isOK          = true;
     protected static $description   = [

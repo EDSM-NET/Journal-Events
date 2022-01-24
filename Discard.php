@@ -59,12 +59,13 @@ class Discard
         // Odyssey
         'BookDropship',
         'CancelDropship',
+        'DropshipDeploy',
 
-        // Odysset - Backed by BackpackChange
+        // Odyssey - Backed by BackpackChange
         'CollectItems',
         'DropItems',
 
-        //'Disembark', //TODO: Use for Foot discovery
+        'Disembark', //TODO: Use for Foot discovery
         'Embark',
 
         // Load events
@@ -142,6 +143,12 @@ class Discard
         'MassModuleStore',
         'ModuleStore',
         'ModuleSwap',
+        
+        // Suit
+        'SuitLoadout',
+        'SwitchSuitLoadout',
+        'CreateSuitLoadout',
+        'LoadoutEquipModule',
 
         // Powerplay
         'PowerplayVote',
@@ -187,5 +194,9 @@ class Discard
         'FSSSignalDiscovered',
         'AsteroidCracked',
         'ProspectedAsteroid',
+        'ScanBaryCentre',
+        'FSSBodySignals',
+        'SAASignalsFound',
+        'ScanOrganic',
     ];
 }
