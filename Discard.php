@@ -92,6 +92,7 @@ class Discard
         'SupercruiseEntry',
         'SupercruiseExit',
         'NavRoute',
+        'NavRouteClear',
 
         // We might reconsider this, and see if we can do something about crime report?
         'PVPKill',

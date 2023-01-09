@@ -737,10 +737,12 @@ class MissionAccepted extends Event
             {
                 if(array_key_exists('Donation', $json) && is_int($json['Donation']))
                 {
-                    $missionDetails['donation'] = $json['Donation'];
+                    $missionDetails['donation'] = trim($json['Donation']);
                 }
                 else
                 {
+                    $json['LocalisedName'] = str_ireplace('&nbsp;', ' ', $json['LocalisedName']);
+                    
                     if(stripos($json['LocalisedName'], ' cr to the cause') !== false)
                     {
                         $json['LocalisedName']      = str_ireplace('donate ', '', $json['LocalisedName']);
@@ -846,6 +848,7 @@ class MissionAccepted extends Event
                     elseif(stripos($json['LocalisedName'], ' КР., чтобы справиться с гражданскими беспорядками') !== false)
                     {
                         $json['LocalisedName']      = str_replace(' КР., чтобы справиться с гражданскими беспорядками.', '', $json['LocalisedName']);
+                        $json['LocalisedName']      = str_replace(' КР., чтобы справиться с гражданскими беспорядками', '', $json['LocalisedName']);
                         $json['LocalisedName']      = str_replace('Предоставьте ', '', $json['LocalisedName']);
                         $missionDetails['donation'] = str_replace(chr(194).chr(160), '', $json['LocalisedName']);
                     }

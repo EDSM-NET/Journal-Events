@@ -11,7 +11,7 @@ class ApproachSettlement extends Event
 {
     protected static $isOK          = true;
     protected static $description   = [
-        'Check for Planetary Settlement Latitude/Longitude.',
+        'Update Planetary Settlement Latitude/Longitude.',
     ];
 
 
@@ -26,25 +26,34 @@ class ApproachSettlement extends Event
             {
                 $station            = \EDSM_System_Station::getInstance($stationId);
                 $haveCoordinates    = $station->getCoordinates();
+                $stationsModel      = new \Models_Stations;
 
                 if(is_null($haveCoordinates))
                 {
-                    static::$return['msgnum']   = 402;
-                    static::$return['msg']      = 'Item unknown';
-
-                    // Save until further processing
-                    $json['isError']            = 1;
-                    \Journal\Event::run($json);
+                    $stationsModel->updateById(
+                        $station->getId(),
+                        [
+                            'bodyLatitude'  => $json['Latitude'],
+                            'bodyLongitude' => $json['Longitude'],
+                        ]
+                    );
                 }
-            }
-            else
-            {
-                static::$return['msgnum']   = 402;
-                static::$return['msg']      = 'Item unknown';
-
-                // Save undockable settlements...
-                $json['isError']            = 1;
-                \Journal\Event::run($json);
+                else
+                {
+                    if(!is_null($station->getUpdateTime()) && strtotime($station->getUpdateTime()) <= strtotime($json['timestamp']))
+                    {
+                        if($haveCoordinates['latitude'] !== $json['Latitude'] || $haveCoordinates['longitude'] !== $json['Longitude'])
+                        {
+                            $stationsModel->updateById(
+                                $station->getId(),
+                                [
+                                    'bodyLatitude'  => $json['Latitude'],
+                                    'bodyLongitude' => $json['Longitude'],
+                                ]
+                            );
+                        }
+                    }
+                }
             }
         }
 

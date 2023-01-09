@@ -132,7 +132,7 @@ class Location extends Event
                                  ->limit(1)
             );
 
-            if(is_null($lastFSDJump) || (!is_null($lastFSDJump) && $lastFSDJump->system != $systemId))
+            if(is_null($lastFSDJump) || (!is_null($lastFSDJump) && $lastFSDJump->system != $systemId && $lastFSDJump->dateVisited != $json['timestamp']))
             {
                 $insert                 = array();
                 $insert['user']         = static::$user->getId();

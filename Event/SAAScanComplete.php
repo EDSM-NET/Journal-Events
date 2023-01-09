@@ -24,6 +24,10 @@ class SAAScanComplete extends Event
         {
             return static::$return; // @See EDDN\System\Body
         }
+        if(substr($json['BodyName'], -5) === ' Ring')
+        {
+            return static::$return;
+        }
 
         $currentBody        = null;
         $systemsBodiesModel = new \Models_Systems_Bodies;

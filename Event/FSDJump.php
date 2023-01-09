@@ -157,6 +157,8 @@ class FSDJump extends Event
                         return static::$return;
                     }
                 }
+                
+                static::$return['systemCreated']    = false;
 
                 if(!is_null($systemCoordinates))
                 {
